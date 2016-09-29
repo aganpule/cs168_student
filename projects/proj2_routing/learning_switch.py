@@ -73,10 +73,5 @@ class LearningSwitch(api.Entity):
             # Flood out all ports except the input port
             self.send(packet, in_port, flood=True)
         else:
-            #send packet through the correct port
+            # Send packet through the correct port
             self.send(packet, self.links[dst])
-            
-
-
-
-        
