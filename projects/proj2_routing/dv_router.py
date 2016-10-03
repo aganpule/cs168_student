@@ -2,10 +2,24 @@
 
 import sim.api as api
 import sim.basics as basics
-from collections import defaultdict
+import collections
 
 # We define infinity as a distance of 16.
 INFINITY = 16
+
+class DistanceVector:
+
+    def __init__(self):
+        self.vector = {}
+
+    def add_dst(self, dst, latency, next_hop):
+        self.vector[dst] = (latency, next_hop)
+
+    def get_latency(dst):
+        return self.vector[dst][0]
+
+    def get_next_hop(dst):
+        return self.vector[dst][1]
 
 class DVRouter(basics.DVRouterBase):
     NO_LOG = True # Set to True on an instance to disable its logging
@@ -22,7 +36,7 @@ class DVRouter(basics.DVRouterBase):
         self.start_timer()  # Starts calling handle_timer() at correct rate
         # maps dst => (latency, next_hop)
         self.vector = {}
-        self.table = defaultdict(dict)
+        self.table = collections.defaultdict(dict)
 
     def handle_link_up(self, port, latency):
         """
