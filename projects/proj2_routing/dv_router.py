@@ -8,16 +8,43 @@ import time
 # We define infinity as a distance of 16.
 INFINITY = 16
 
-class DistanceVector:
-
+# Need to keep mapping of neighbor to latency
+# Use this info to recalculate our vector
+class RoutingTable(object):
     def __init__(self):
+        # Maps port => latency
+        self.neighbors = {}
+        # Maps dst => [latency, next_hop]
         self.vector = {}
+        # Maps dst => {port: [latency, timestamp]}
+        self.table = collections.defaultdict(dict)
 
-    def add_dst(self, dst, latency, next_hop):
-        self.vector[dst] = (latency, next_hop)
+    def add_neighbor(self, port, latency):
+        self.neighbors[port] = latency
 
-    def get_latency(dst):
-        return self.vector[dst][0]
+    def remove_neighbor(self, port):
+        del self.neighbors[port]
+
+    def update_table(self, port, dst, latency):
+        self.table[dst][port] = [latency, time.clock()]
+
+    def recalculate_vector(self):
+        for dst in self.vector:
+            # What if destination is a neighbor?
+            min_latency = float('inf')
+            next_hop = None
+            for port in self.table[dst]:
+                timestamp = self.table[dst][port][1]
+                # Entry is enpired
+                if time.clock() - timestamp > 15:
+                    continue
+                total_latency = self.table[dst][port][0] + self.neighbors[port]
+                if total_latency < min_latency:
+                    min_latency = total_latency
+                    next_hop = port
+            if next_hop is None:
+                # Handle poison mode here?
+            self.vector[dst] = [min_latency, next_hop]
 
     def get_next_hop(dst):
         return self.vector[dst][1]
@@ -90,7 +117,7 @@ class DVRouter(basics.DVRouterBase):
         # Discovering a new host that's a neighbor
         elif isinstance(packet, basics.HostDiscoveryPacket):
             # Add this host (packet.src) as a potential destination in our vector table
-            # Latency???
+            # Latency would have already been determined in link up
             pass
         # Just a regular data packet
         else:
