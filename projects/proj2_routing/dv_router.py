@@ -12,18 +12,25 @@ INFINITY = 16
 # Use this info to recalculate our vector
 class RoutingTable(object):
     def __init__(self):
-        # Maps port => [latency, destination]
+        # # Maps port => [latency, destination]
+        # self.neighbors = {}
+        # # Maps dst => [latency, next_hop]
+        # self.vector = {}
+       
+        # Maps port => latency
         self.neighbors = {}
-        # Maps dst => [latency, next_hop]
-        self.vector = {}
-        # Maps dst => {port: [latency, timestamp]}
+        # Maps host => {port: [total_latency, timestamp]}
         self.table = collections.defaultdict(dict)
 
+
     def add_host(self, port, address):
-        self.neighbors[port][1] = address
+        # self.neighbors[port][1] = address
+        latency = self.neighbors[port]
+        self.host[address] = [latency, port, time.clock()]
 
     def add_neighbor(self, port, latency):
-        self.neighbors[port] = [latency, None]
+        # self.neighbors[port] = [latency, None]
+        self.neighbors[port] = [latency]
 
     def remove_neighbor(self, port):
         del self.neighbors[port]
@@ -73,7 +80,7 @@ class RoutingTable(object):
         return self.vector[dst][1]
 
     def send_vector(self):
-        # For every neighbor that's not a host
+        # For every neighbor that's not a host;;
         for port in self.neighbors:
             is_host = self.neighbors[port][1] is not None
             if not is_host:
@@ -152,6 +159,7 @@ class DVRouter(basics.DVRouterBase):
             # If not, drop the packet
             # Else, send to the next hop specified in our vector
             self.table.recalculate_vector()
+            dst = packet.dst
             next_hop = self.table.get_next_hop(dst)
             if next_hop:
                 self.send(packet, port=next_hop)
