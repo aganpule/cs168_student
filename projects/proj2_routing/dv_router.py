@@ -5,6 +5,7 @@ import sim.basics as basics
 import collections
 import time
 import copy
+import pprint
 
 # We define infinity as a distance of 16.
 INFINITY = 16
@@ -15,38 +16,41 @@ class RoutingTable(object):
         # Maps port => latency
         self.neighbors = {}
         # Maps dst => {port: [latency, timestamp]}, where dst is a host address
-        self.table = collections.defaultdict(dict)
+        self.table = {}
 
-    def add_host(self, port, address):
+    def add_host(self, port, name):
         # self.update(port, address, self.neighbors[port])
-        self.update(port, address, 0)
+        self.update(port, name, 0)
 
     def add_neighbor(self, port, latency):
-        api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
+        # api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
         self.neighbors[port] = latency
 
     def remove_neighbor(self, port):
-        api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
+        # api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
         del self.neighbors[port]
-        # copy_table = copy.deepcopy(self.table)
-        # for dst in copy_table:
-        #     for p in copy_table[dst]:
-        #         if p == port:
-        #             del self.table[dst][p]
+        table_copy = copy.deepcopy(self.table)
+        for name in table_copy:
+            for p in table_copy[name]:
+                if p == port:
+                    del self.table[name][p]
 
-    def update(self, port, dst, latency):
-        self.table[dst][port] = [latency, time.clock()]
+    def update(self, port, name, latency):
+        if name not in self.table:
+            self.table[name] = {}
+        self.table[name][port] = [latency, time.clock()]
 
     def get_next_hop(self, dst):
         min_latency, next_hop = float('inf'), None
+        copy_table = copy.deepcopy(self.table)
         for port in self.table[dst]:
             if port not in self.neighbors:
                 continue
             latency, timestamp = self.table[dst][port]
             # Entry has expired, so remove it
-            if time.clock() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
-                del self.table[dst][port]
-                continue
+            # if time.clock() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
+            #     del self.table[dst][port]
+            #     continue
             total_latency = latency + self.neighbors[port]
             if total_latency < min_latency:
                 min_latency = total_latency
@@ -74,12 +78,9 @@ class RoutingTable(object):
                 else: # Split horizon; do nothing
                     continue
             else:
+                # if api.get_name(self.router) == 's1':
+                #     api.userlog.debug(self.table)
                 self.router.send(basics.RoutePacket(dst, latency), port)
-
-
-
-
-
 
 class DVRouter(basics.DVRouterBase):
     NO_LOG = True # Set to True on an instance to disable its logging
@@ -94,7 +95,6 @@ class DVRouter(basics.DVRouterBase):
 
         """
         self.start_timer()  # Starts calling handle_timer() at correct rate
-        # maps dst => (latency, next_hop)
         self.table = RoutingTable(self)
 
     def handle_link_up(self, port, latency):
@@ -131,12 +131,12 @@ class DVRouter(basics.DVRouterBase):
         # Getting an update from a neighbor
         if isinstance(packet, basics.RoutePacket):
             # Update our routing table with new info, including the time received
-            self.table.update(port, packet.destination, packet.latency)
+            self.table.update(port, api.get_name(packet.destination), packet.latency)
         # Discovering a new host that's a neighbor
         elif isinstance(packet, basics.HostDiscoveryPacket):
             # Add this host (packet.src) as a potential destination in our vector table
             # Latency would have already been determined in link up
-            self.table.add_host(port, packet.src)
+            self.table.add_host(port, api.get_name(packet.src))
         # Just a regular data packet
         else:
             # Identify the next_hop port for this dst
