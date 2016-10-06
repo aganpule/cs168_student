@@ -4,6 +4,7 @@ import sim.api as api
 import sim.basics as basics
 import collections
 import time
+import copy
 
 # We define infinity as a distance of 16.
 INFINITY = 16
@@ -13,34 +14,46 @@ class RoutingTable(object):
         self.router = router
         # Maps port => latency
         self.neighbors = {}
-        # Maps dst => {port: [latency, timestamp]}
+        # Maps dst => {port: [latency, timestamp]}, where dst is a host address
         self.table = collections.defaultdict(dict)
 
     def add_host(self, port, address):
-        self.update(port, address, self.neighbors[port])
+        # self.update(port, address, self.neighbors[port])
+        self.update(port, address, 0)
 
     def add_neighbor(self, port, latency):
         self.neighbors[port] = latency
 
     def remove_neighbor(self, port):
         del self.neighbors[port]
+        # copy_table = copy.deepcopy(self.table)
+        # for dst in copy_table:
+        #     for p in copy_table[dst]:
+        #         if p == port:
+        #             del self.table[dst][p]
 
     def update(self, port, dst, latency):
         self.table[dst][port] = [latency, time.clock()]
 
+    def get_next_hop(self, dst):
+        min_latency, next_hop = float('inf'), None
+        for port in self.table[dst]:
+            # if port not in self.neighbors:
+            #     continue
+            latency, timestamp = self.table[dst][port]
+            # Entry has expired, so remove it
+            if time.clock() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
+                del self.table[dst][port]
+                continue
+            total_latency = latency + self.neighbors[port]
+            if total_latency < min_latency:
+                min_latency = total_latency
+                next_hop = port
+        return min_latency, next_hop
+
     def send_vector(self):
         for dst in self.table:
-            min_latency, next_hop = float('inf'), None
-            for port in self.table[dst]:
-                latency, timestamp = self.table[dst][port]
-                # Entry has expired, so remove it
-                if time.clock() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
-                    del self.table[dst][port]
-                    continue
-                total_latency = latency + self.neighbors[port]
-                if total_latency < min_latency:
-                    min_latency = total_latency
-                    next_hop = port
+            min_latency, next_hop = self.get_next_hop(dst)
             # Unable to find route to dst
             if next_hop is None:
                 if DVRouter.POISON_MODE: # TODO(not sure if this is right)
@@ -55,11 +68,14 @@ class RoutingTable(object):
         for port in self.neighbors:
             if port == next_hop:
                 if DVRouter.POISON_MODE:
-                    self.router.send(RoutePacket(dst, INFINITY))
+                    self.router.send(basics.RoutePacket(dst, INFINITY))
                 else: # Split horizon; do nothing
                     continue
             else:
-                self.router.send(RoutePacket(dst, latency))
+                self.router.send(basics.RoutePacket(dst, latency), port)
+
+
+
 
 
 
@@ -121,15 +137,12 @@ class DVRouter(basics.DVRouterBase):
             self.table.add_host(port, packet.src)
         # Just a regular data packet
         else:
-            # Send the data packet to the port specified in our vector
-            # First recalculate our vector
-            # Then check if destination is in our vector
-            # If not, drop the packet
-            # Else, send to the next hop specified in our vector
-            self.table.recalculate_vector()
+            # Identify the next_hop port for this dst
+            # If next_hop exists, send the packet to this port
+            # Else, drop the packet
             dst = packet.dst
-            next_hop = self.table.get_next_hop(dst)
-            if next_hop:
+            min_latency, next_hop = self.table.get_next_hop(dst)
+            if next_hop != None and next_hop != port:
                 self.send(packet, port=next_hop)
             # No way of getting there, so drop packet (do nothing)
 
@@ -147,5 +160,4 @@ class DVRouter(basics.DVRouterBase):
         # Remove entry if expired (if current time - entry time > 15s)
         # Take minimum total latency (total latency = time to neighbor + neighbor's distance to dst)
         # Then send our vector to all neighbors
-        self.table.recalculate_vector()
         self.table.send_vector()
