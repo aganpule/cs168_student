@@ -22,17 +22,15 @@ class RoutingTable(object):
         self.update(port, address, 0)
 
     def add_neighbor(self, port, latency):
-        api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
         self.neighbors[port] = latency
 
     def remove_neighbor(self, port):
-        api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
         del self.neighbors[port]
-        # copy_table = copy.deepcopy(self.table)
-        # for dst in copy_table:
-        #     for p in copy_table[dst]:
-        #         if p == port:
-        #             del self.table[dst][p]
+        copy_table = copy.deepcopy(self.table)
+        for dst in copy_table:
+            for p in copy_table[dst]:
+                if p == port:
+                    del self.table[dst][p]
 
     def update(self, port, dst, latency):
         self.table[dst][port] = [latency, time.clock()]
@@ -70,14 +68,11 @@ class RoutingTable(object):
         for port in self.neighbors:
             if port == next_hop:
                 if DVRouter.POISON_MODE:
-                    self.router.send(basics.RoutePacket(dst, INFINITY))
+                    self.router.send(basics.RoutePacket(dst, INFINITY), port)
                 else: # Split horizon; do nothing
                     continue
             else:
                 self.router.send(basics.RoutePacket(dst, latency), port)
-
-
-
 
 
 
@@ -144,8 +139,16 @@ class DVRouter(basics.DVRouterBase):
             # Else, drop the packet
             dst = packet.dst
             min_latency, next_hop = self.table.get_next_hop(dst)
+            if next_hop is not None:
+                api.userlog.debug("Trying to send a packet from %s to %s on port %d", api.get_name(packet.src), api.get_name(packet.dst), next_hop)
+            else:
+                api.userlog.debug("Trying to send a packet from %s to %s. But port is None", api.get_name(packet.src), api.get_name(packet.dst))
+                print ("I am " + api.get_name(self))
+                print self.table.table
             if next_hop != None and next_hop != port:
                 self.send(packet, port=next_hop)
+                api.userlog.debug("Sent packet from %s on port %d.", api.get_name(packet.src), next_hop)
+
             # No way of getting there, so drop packet (do nothing)
 
     def handle_timer(self):
