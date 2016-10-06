@@ -22,9 +22,11 @@ class RoutingTable(object):
         self.update(port, address, 0)
 
     def add_neighbor(self, port, latency):
+        api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
         self.neighbors[port] = latency
 
     def remove_neighbor(self, port):
+        api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
         del self.neighbors[port]
         # copy_table = copy.deepcopy(self.table)
         # for dst in copy_table:
@@ -38,8 +40,8 @@ class RoutingTable(object):
     def get_next_hop(self, dst):
         min_latency, next_hop = float('inf'), None
         for port in self.table[dst]:
-            # if port not in self.neighbors:
-            #     continue
+            if port not in self.neighbors:
+                continue
             latency, timestamp = self.table[dst][port]
             # Entry has expired, so remove it
             if time.clock() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
