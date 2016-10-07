@@ -5,6 +5,7 @@ import sim.basics as basics
 import collections
 import time
 import copy
+import pprint
 
 # We define infinity as a distance of 16.
 INFINITY = 16
@@ -15,40 +16,54 @@ class RoutingTable(object):
         # Maps port => latency
         self.neighbors = {}
         # Maps dst => {port: [latency, timestamp]}, where dst is a host address
-        self.table = collections.defaultdict(dict)
+        self.table = {}
 
-    def add_host(self, port, address):
+    def add_host(self, port, dst):
         # self.update(port, address, self.neighbors[port])
-        self.update(port, address, 0)
+        self.update(port, dst, 0)
 
     def add_neighbor(self, port, latency):
+        # api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
         self.neighbors[port] = latency
 
     def remove_neighbor(self, port):
-        del self.neighbors[port]
-        copy_table = copy.deepcopy(self.table)
-        for dst in copy_table:
-            for p in copy_table[dst]:
-                if p == port:
-                    del self.table[dst][p]
+        # api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
 
+        del self.neighbors[port]
+
+        to_remove = set()
+        for dst in self.table:
+            for p in self.table[dst]:
+                if p == port:
+                    to_remove.add(dst)
+        for elem in to_remove:
+            del self.table[elem][port]
+
+                    
     def update(self, port, dst, latency):
-        self.table[dst][port] = [latency, time.clock()]
+        if dst not in self.table:
+            self.table[dst] = {}
+        self.table[dst][port] = [latency, api.current_time()]
 
     def get_next_hop(self, dst):
-        min_latency, next_hop = float('inf'), None
+        min_latency, next_hop = INFINITY, None
+        expired = set()
+
         for port in self.table[dst]:
             if port not in self.neighbors:
                 continue
             latency, timestamp = self.table[dst][port]
             # Entry has expired, so remove it
-            if time.clock() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
-                del self.table[dst][port]
+            if api.current_time() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
+                expired.add(port)
                 continue
             total_latency = latency + self.neighbors[port]
             if total_latency < min_latency:
                 min_latency = total_latency
                 next_hop = port
+
+        for port in expired:
+            del self.table[dst][port]
         return min_latency, next_hop
 
     def send_vector(self):
@@ -68,13 +83,13 @@ class RoutingTable(object):
         for port in self.neighbors:
             if port == next_hop:
                 if DVRouter.POISON_MODE:
-                    self.router.send(basics.RoutePacket(dst, INFINITY), port)
+                    self.router.send(basics.RoutePacket(dst, INFINITY))
                 else: # Split horizon; do nothing
                     continue
             else:
+                # if api.get_name(self.router) == 's1':
+                #     api.userlog.debug(self.table)
                 self.router.send(basics.RoutePacket(dst, latency), port)
-
-
 
 class DVRouter(basics.DVRouterBase):
     NO_LOG = True # Set to True on an instance to disable its logging
@@ -89,7 +104,6 @@ class DVRouter(basics.DVRouterBase):
 
         """
         self.start_timer()  # Starts calling handle_timer() at correct rate
-        # maps dst => (latency, next_hop)
         self.table = RoutingTable(self)
 
     def handle_link_up(self, port, latency):
@@ -139,16 +153,9 @@ class DVRouter(basics.DVRouterBase):
             # Else, drop the packet
             dst = packet.dst
             min_latency, next_hop = self.table.get_next_hop(dst)
-            if next_hop is not None:
-                api.userlog.debug("Trying to send a packet from %s to %s on port %d", api.get_name(packet.src), api.get_name(packet.dst), next_hop)
-            else:
-                api.userlog.debug("Trying to send a packet from %s to %s. But port is None", api.get_name(packet.src), api.get_name(packet.dst))
-                print ("I am " + api.get_name(self))
-                print self.table.table
+            print ("Trying to send packet from %s to %s", packet.src, packet.dst)
             if next_hop != None and next_hop != port:
                 self.send(packet, port=next_hop)
-                api.userlog.debug("Sent packet from %s on port %d.", api.get_name(packet.src), next_hop)
-
             # No way of getting there, so drop packet (do nothing)
 
     def handle_timer(self):
