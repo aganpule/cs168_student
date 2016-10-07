@@ -54,9 +54,9 @@ class RoutingTable(object):
                 continue
             latency, timestamp = self.table[dst][port]
             # Entry has expired, so remove it
-            if api.current_time() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
-                expired.add(port)
-                continue
+            # if api.current_time() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
+            #     expired.add(port)
+            #     continue
             total_latency = latency + self.neighbors[port]
             if total_latency < min_latency:
                 min_latency = total_latency
@@ -67,13 +67,14 @@ class RoutingTable(object):
         return min_latency, next_hop
 
     def send_vector(self):
+
         for dst in self.table:
             min_latency, next_hop = self.get_next_hop(dst)
             # Unable to find route to dst
             if next_hop is None:
                 if DVRouter.POISON_MODE: # TODO(not sure if this is right)
                     self.send_route_packet(dst, INFINITY, None)
-                else: # Split horizon
+                else:
                     continue
             else:
                 self.send_route_packet(dst, min_latency, next_hop)
@@ -81,14 +82,13 @@ class RoutingTable(object):
     def send_route_packet(self, dst, latency, next_hop):
         # TODO(should not be sending to host neighbors)
         for port in self.neighbors:
+            # api.userlog.debug("%s is sending an update to port %d", api.get_name(self.router), port)
             if port == next_hop:
                 if DVRouter.POISON_MODE:
                     self.router.send(basics.RoutePacket(dst, INFINITY))
                 else: # Split horizon; do nothing
                     continue
             else:
-                # if api.get_name(self.router) == 's1':
-                #     api.userlog.debug(self.table)
                 self.router.send(basics.RoutePacket(dst, latency), port)
 
 class DVRouter(basics.DVRouterBase):
@@ -153,7 +153,10 @@ class DVRouter(basics.DVRouterBase):
             # Else, drop the packet
             dst = packet.dst
             min_latency, next_hop = self.table.get_next_hop(dst)
-            print ("Trying to send packet from %s to %s", packet.src, packet.dst)
+            api.userlog.debug("Trying to send packet from %s to %s", api.get_name(packet.src), api.get_name(packet.dst))
+            print api.get_name(self)
+            print (self.table.neighbors)
+            print (self.table.table)
             if next_hop != None and next_hop != port:
                 self.send(packet, port=next_hop)
             # No way of getting there, so drop packet (do nothing)
