@@ -43,6 +43,9 @@ class RoutingTable(object):
     def update(self, port, dst, latency):
         if dst not in self.table:
             self.table[dst] = {}
+
+        # curr_latency = self.table[dst][port][0] if (port in self.table[dst]) else INFINITY
+        # if curr_latency < latency and (api.current_time() - self.table[dst][port][1] >)
         self.table[dst][port] = [latency, api.current_time()]
 
     def get_next_hop(self, dst):
@@ -54,9 +57,9 @@ class RoutingTable(object):
                 continue
             latency, timestamp = self.table[dst][port]
             # Entry has expired, so remove it
-            # if api.current_time() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
-            #     expired.add(port)
-            #     continue
+            if api.current_time() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
+                expired.add(port)
+                continue
             total_latency = latency + self.neighbors[port]
             if total_latency < min_latency:
                 min_latency = total_latency
@@ -94,7 +97,7 @@ class RoutingTable(object):
 class DVRouter(basics.DVRouterBase):
     NO_LOG = True # Set to True on an instance to disable its logging
     POISON_MODE = False # Can override POISON_MODE here
-    DEFAULT_TIMER_INTERVAL = 5 # Can override this yourself for testing
+    DEFAULT_TIMER_INTERVAL = 15 # Can override this yourself for testing
 
     def __init__(self):
         """
