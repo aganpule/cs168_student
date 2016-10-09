@@ -10,17 +10,25 @@ import pprint
 # We define infinity as a distance of 16.
 INFINITY = 16
 
+class TableEntry(object):
+
+    def __init__(self, latency):
+        self.latency = latency
+        self.timestamp = api.current_time()
+        is_host = False
+
 class RoutingTable(object):
     def __init__(self, router):
         self.router = router
         # Maps port => latency
         self.neighbors = {}
-        # Maps dst => {port: [latency, timestamp]}, where dst is a host address
+        # Maps dst => TableEntry
         self.table = {}
 
     def add_host(self, port, dst):
         # self.update(port, address, self.neighbors[port])
         self.update(port, dst, 0)
+        self.table[dst][port].is_host = True
 
     def add_neighbor(self, port, latency):
         # api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
@@ -46,18 +54,18 @@ class RoutingTable(object):
 
         # curr_latency = self.table[dst][port][0] if (port in self.table[dst]) else INFINITY
         # if curr_latency < latency and (api.current_time() - self.table[dst][port][1] >)
-        self.table[dst][port] = [latency, api.current_time()]
+        self.table[dst][port] = TableEntry(latency)
 
     def get_next_hop(self, dst):
         min_latency, next_hop = INFINITY, None
         expired = set()
         for port in self.table[dst]:
-            latency, timestamp = self.table[dst][port]
+            entry = self.table[dst][port]
             # Entry has expired, so remove it
-            if latency != 0 and api.current_time() - timestamp > DVRouter.ROUTE_TIMEOUT:
+            if not entry.is_host and (api.current_time() - entry.timestamp) > DVRouter.ROUTE_TIMEOUT:
                 expired.add(port)
                 continue
-            total_latency = latency + self.neighbors[port]
+            total_latency = entry.latency + self.neighbors[port]
             if total_latency < min_latency:
                 min_latency = total_latency
                 next_hop = port
