@@ -37,14 +37,10 @@ class RoutingTable(object):
         self.neighbors[port].is_host = True
 
     def add_neighbor(self, port, latency):
-        # api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
         self.neighbors[port] = NeighborsEntry(latency)
 
     def remove_neighbor(self, port):
-        # api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
-
         del self.neighbors[port]
-
         to_remove = set()
         for dst in self.table:
             for p in self.table[dst]:
@@ -89,9 +85,7 @@ class RoutingTable(object):
                 self.send_route_packet(dst, min_latency, next_hop, recipient_port)
 
     def send_route_packet(self, dst, latency, next_hop, recipient_port):
-        # TODO(should not be sending to host neighbors)
         for port in self.neighbors:
-            # api.userlog.debug("%s is sending an update to port %d", api.get_name(self.router), port)
             if (recipient_port and port != recipient_port) or self.neighbors[port].is_host:
                 continue
             if port == next_hop:
