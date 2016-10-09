@@ -28,6 +28,9 @@ def main():
     t.test('dv_router', 'tests.test_expire_routes')
     t.test('learning_switch', 'tests.test_learning_complex')
     t.test('dv_router', 'tests.test_link_weights_multi_router_host')
+    t.test('dv_router', 'tests.diamond_top')
+    t.test('dv_router', 'tests.test_basics_intensely')
+    t.test('dv_router', 'tests.test_fun')
     t.test(
         'dv_router',
         'tests.test_route_poisoning',

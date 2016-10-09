@@ -15,7 +15,7 @@ class TableEntry(object):
     def __init__(self, latency):
         self.latency = latency
         self.timestamp = api.current_time()
-        is_host = False
+        self.is_host = False
 
 class RoutingTable(object):
     def __init__(self, router):
@@ -69,8 +69,8 @@ class RoutingTable(object):
             if total_latency < min_latency:
                 min_latency = total_latency
                 next_hop = port
-        # for port in expired:
-        #     del self.table[dst][port]
+        for port in expired:
+            del self.table[dst][port]
         return min_latency, next_hop
 
     def send_vector(self):
@@ -91,7 +91,7 @@ class RoutingTable(object):
             # api.userlog.debug("%s is sending an update to port %d", api.get_name(self.router), port)
             if port == next_hop:
                 if DVRouter.POISON_MODE:
-                    self.router.send(basics.RoutePacket(dst, INFINITY))
+                    self.router.send(basics.RoutePacket(dst, INFINITY), port)
                 else: # Split horizon; do nothing
                     continue
             else:
@@ -159,10 +159,7 @@ class DVRouter(basics.DVRouterBase):
             # Else, drop the packet
             dst = packet.dst
             min_latency, next_hop = self.table.get_next_hop(dst)
-            api.userlog.debug("Trying to send packet from %s to %s", api.get_name(packet.src), api.get_name(packet.dst))
-            print api.get_name(self)
-            print (self.table.neighbors)
-            print (self.table.table)
+     
             if next_hop != None and next_hop != port:
                 self.send(packet, port=next_hop)
             # No way of getting there, so drop packet (do nothing)
