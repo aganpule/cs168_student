@@ -39,7 +39,7 @@ class RoutingTable(object):
         for elem in to_remove:
             del self.table[elem][port]
 
-                    
+
     def update(self, port, dst, latency):
         if dst not in self.table:
             self.table[dst] = {}
@@ -51,26 +51,21 @@ class RoutingTable(object):
     def get_next_hop(self, dst):
         min_latency, next_hop = INFINITY, None
         expired = set()
-
         for port in self.table[dst]:
-            if port not in self.neighbors:
-                continue
             latency, timestamp = self.table[dst][port]
             # Entry has expired, so remove it
-            if api.current_time() - timestamp > DVRouter.DEFAULT_TIMER_INTERVAL:
+            if latency != 0 and api.current_time() - timestamp > DVRouter.ROUTE_TIMEOUT:
                 expired.add(port)
                 continue
             total_latency = latency + self.neighbors[port]
             if total_latency < min_latency:
                 min_latency = total_latency
                 next_hop = port
-
-        for port in expired:
-            del self.table[dst][port]
+        # for port in expired:
+        #     del self.table[dst][port]
         return min_latency, next_hop
 
     def send_vector(self):
-
         for dst in self.table:
             min_latency, next_hop = self.get_next_hop(dst)
             # Unable to find route to dst
@@ -97,7 +92,7 @@ class RoutingTable(object):
 class DVRouter(basics.DVRouterBase):
     NO_LOG = True # Set to True on an instance to disable its logging
     POISON_MODE = False # Can override POISON_MODE here
-    DEFAULT_TIMER_INTERVAL = 15 # Can override this yourself for testing
+    DEFAULT_TIMER_INTERVAL = 5 # Can override this yourself for testing
 
     def __init__(self):
         """
