@@ -17,22 +17,28 @@ class TableEntry(object):
         self.timestamp = api.current_time()
         self.is_host = False
 
+class NeighborsEntry(object):
+
+    def __init__(self, latency):
+        self.latency = latency
+        self.is_host = False
+
 class RoutingTable(object):
     def __init__(self, router):
         self.router = router
-        # Maps port => latency
+        # Maps port => NeighborsEntry
         self.neighbors = {}
         # Maps dst => TableEntry
         self.table = {}
 
     def add_host(self, port, dst):
-        # self.update(port, address, self.neighbors[port])
         self.update(port, dst, 0)
         self.table[dst][port].is_host = True
+        self.neighbors[port].is_host = True
 
     def add_neighbor(self, port, latency):
         # api.userlog.debug("Adding port %d as a neighbor to %s", port, api.get_name(self.router))
-        self.neighbors[port] = latency
+        self.neighbors[port] = NeighborsEntry(latency)
 
     def remove_neighbor(self, port):
         # api.userlog.debug("Removing port %d as a neighbor of %s", port, api.get_name(self.router))
@@ -51,9 +57,6 @@ class RoutingTable(object):
     def update(self, port, dst, latency):
         if dst not in self.table:
             self.table[dst] = {}
-
-        # curr_latency = self.table[dst][port][0] if (port in self.table[dst]) else INFINITY
-        # if curr_latency < latency and (api.current_time() - self.table[dst][port][1] >)
         self.table[dst][port] = TableEntry(latency)
 
     def get_next_hop(self, dst):
@@ -65,7 +68,7 @@ class RoutingTable(object):
             if not entry.is_host and (api.current_time() - entry.timestamp) > DVRouter.ROUTE_TIMEOUT:
                 expired.add(port)
                 continue
-            total_latency = entry.latency + self.neighbors[port]
+            total_latency = entry.latency + self.neighbors[port].latency
             if total_latency < min_latency:
                 min_latency = total_latency
                 next_hop = port
@@ -73,22 +76,24 @@ class RoutingTable(object):
             del self.table[dst][port]
         return min_latency, next_hop
 
-    def send_vector(self):
+    def send_vector(self, recipient_port=None):
         for dst in self.table:
             min_latency, next_hop = self.get_next_hop(dst)
             # Unable to find route to dst
             if next_hop is None:
                 if DVRouter.POISON_MODE: # TODO(not sure if this is right)
-                    self.send_route_packet(dst, INFINITY, None)
+                    self.send_route_packet(dst, INFINITY, None, recipient_port)
                 else:
                     continue
             else:
-                self.send_route_packet(dst, min_latency, next_hop)
+                self.send_route_packet(dst, min_latency, next_hop, recipient_port)
 
-    def send_route_packet(self, dst, latency, next_hop):
+    def send_route_packet(self, dst, latency, next_hop, recipient_port):
         # TODO(should not be sending to host neighbors)
         for port in self.neighbors:
             # api.userlog.debug("%s is sending an update to port %d", api.get_name(self.router), port)
+            if (recipient_port and port != recipient_port) or self.neighbors[port].is_host:
+                continue
             if port == next_hop:
                 if DVRouter.POISON_MODE:
                     self.router.send(basics.RoutePacket(dst, INFINITY), port)
@@ -122,6 +127,8 @@ class DVRouter(basics.DVRouterBase):
         """
         # Learn about new link, add to routing table
         self.table.add_neighbor(port, latency)
+        # Eagerly initialize new neighbors
+        self.table.send_vector(port)
 
     def handle_link_down(self, port):
         """
@@ -159,7 +166,7 @@ class DVRouter(basics.DVRouterBase):
             # Else, drop the packet
             dst = packet.dst
             min_latency, next_hop = self.table.get_next_hop(dst)
-     
+
             if next_hop != None and next_hop != port:
                 self.send(packet, port=next_hop)
             # No way of getting there, so drop packet (do nothing)
