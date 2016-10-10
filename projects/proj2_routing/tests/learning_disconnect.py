@@ -4,7 +4,7 @@ A Super Awesome test of a learning switch.
 This makes sure that the handle_link_down function works correctly
 
 Creates the following topology, then will have some of the links go down, and
-will send pings and make sure the proper amount ar receieved
+will send pings and make sure the proper amount are receieved
 
 h1 - s1 - s2 - s3 - h2
      ||   ||   ||

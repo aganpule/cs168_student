@@ -41,9 +41,13 @@ class LearningSwitch(api.Entity):
         valid here.
 
         """
+        to_remove = set()
         for addr in self.links:
             if self.links[addr] == port:
-                del self.links[addr]
+                to_remove.add(addr)
+
+        for address in to_remove:
+            del self.links[addr]
 
 
     def handle_rx(self, packet, in_port):
