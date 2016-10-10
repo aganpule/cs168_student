@@ -17,11 +17,17 @@ class TableEntry(object):
         self.timestamp = api.current_time()
         self.is_host = False
 
+    def __repr__(self):
+        return "[" + str(self.latency) + "," + str(self.is_host) + "]"
+
 class NeighborsEntry(object):
 
     def __init__(self, latency):
         self.latency = latency
         self.is_host = False
+
+    def __repr__(self):
+        return "[" + str(self.latency) + "," + str(self.is_host) + "]"
 
 class RoutingTable(object):
     def __init__(self, router):
@@ -87,8 +93,13 @@ class RoutingTable(object):
                 self.send_route_packet(dst, min_latency, next_hop, recipient_port)
 
     def send_route_packet(self, dst, latency, next_hop, recipient_port):
+        if recipient_port and recipient_port in self.neighbors:
+            if not self.neighbors[recipient_port].is_host:
+                self.router.send(basics.RoutePacket(dst,latency), recipient_port)
+            return
+
         for port in self.neighbors:
-            if (recipient_port and port != recipient_port) or self.neighbors[port].is_host:
+            if self.neighbors[port].is_host:
                 continue
             if port == next_hop:
                 if DVRouter.POISON_MODE:
