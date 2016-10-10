@@ -57,6 +57,8 @@ class RoutingTable(object):
 
     def get_next_hop(self, dst):
         min_latency, next_hop = INFINITY, None
+        if dst not in self.table:
+            return min_latency, next_hop
         expired = set()
         for port in self.table[dst]:
             entry = self.table[dst][port]
