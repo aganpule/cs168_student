@@ -67,11 +67,12 @@ def launch():
         s2.unlinkTo(c1)
 
         api.userlog.debug("Waiting for routes to converge")
-        yield 10
+        yield 20
 
         api.userlog.debug('Sending ping from h1 to h2')
         h1.ping(h2)
 
+        yield 10
 
         if c1.pings == 1 and c2.pings == 1:
             api.userlog.debug('The ping took the right path')

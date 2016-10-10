@@ -77,7 +77,7 @@ class RoutingTable(object):
             min_latency, next_hop = self.get_next_hop(dst)
             # Unable to find route to dst
             if next_hop is None:
-                if DVRouter.POISON_MODE: # TODO(not sure if this is right)
+                if DVRouter.POISON_MODE:
                     self.send_route_packet(dst, INFINITY, None, recipient_port)
                 else:
                     continue
@@ -174,9 +174,5 @@ class DVRouter(basics.DVRouterBase):
         have expired.
 
         """
-        # First need to update our vector (in case things expired)
-        # Go through each entry in routing table (by destination)
-        # Remove entry if expired (if current time - entry time > 15s)
-        # Take minimum total latency (total latency = time to neighbor + neighbor's distance to dst)
-        # Then send our vector to all neighbors
+        # Send our vector to all neighbors
         self.table.send_vector()
