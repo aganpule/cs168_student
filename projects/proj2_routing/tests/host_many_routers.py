@@ -171,16 +171,10 @@ def launch():
     def test_tasklet():
         yield 100
 
-        print ("R4")
-        print (r4.table.neighbors)
-        print (r4.table.table)
-
         api.userlog.debug('Sending pings')
         h1.ping(h2)
         h1.ping(h3)
         h2.ping(h3)
-
-       
 
         yield 50
 
