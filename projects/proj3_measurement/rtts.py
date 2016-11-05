@@ -1,6 +1,7 @@
 """A python script that pings servers and records/plots the rtts and drop rate"""
 import subprocess
-from collections import defaultdict
+import re
+from numpy import median
 
 """ Runs ping commands and generates json output
 	hostnames: list of hosts to ping
@@ -9,27 +10,26 @@ from collections import defaultdict
 	aggregated_ping_output_filename: name of file to output the aggregated ping results to """
 
 def run_ping(hostnames, num_packets, raw_ping_output_filename, aggregated_ping_output_filename):
-	rtts = dict()
+	raw_pings, aggregate_pings = dict(), dict()
 	for host in hostnames:
 		# Ping host num_packets times
+		host = host.strip()
+		print host
 		output = subprocess.check_output(["ping", "-c", str(num_packets), host])
-		# Go though the lines of output and write to raw_ping_output_filename
-		# Timeouts should have rtt = -1
-		lines = output.split('\n')[1:]
-		rtts[host] = [-1] * num_packets
-		for line in lines:
-			print line
-			if not line:
-				break
-			elif 'bytes from' not in line:
-				continue
-			else:
-				index = int(line.split()[4].split('=')[1])
-				rtts[host][index] = float(line.split()[6].split('=')[1])
-
-		# Aggregate data is in the last 2 lines of output anyway,
-		# so we can just use this instead of keeping track while we are going through the lines of output
-	return rtts
+		p = re.compile('\d+ bytes from \d+\.\d+\.\d+\.\d+: icmp_seq=(\d+) ttl=\d+ time=(\d+\.\d+) ms')
+		raw_pings[host] = [-1.0] * num_packets
+		pings = p.findall(output)
+		successes = []
+		for seq_no, time in pings:
+			raw_pings[host][int(seq_no)] = float(time)
+			successes.append(float(time))
+		raw_pings[host] = sorted(raw_pings[host])
+		aggregate_pings[host] = {
+			'drop_rate': 100 * (num_packets - len(successes)) / float(num_packets),
+			'max_rtt': max(successes),
+			'median_rtt': median(successes)
+		}
+	return raw_pings, aggregate_pings
 
 def plot_median_rtt_cdf(agg_ping_results_filename, output_cdf_filename):
 	return None
@@ -40,6 +40,7 @@ def plot_ping_cdf(raw_ping_results_filename, output_cdf_filename):
 
 
 if __name__ == '__main__':
-	out = run_ping(['google.com'], 30, None, None)
-	print len(out['google.com'])
-	print out
+	with open('alexa_top_100', 'r') as f:
+		raw_pings, aggregate_pings = run_ping(f.readlines(), 1, None, None)
+	print raw_pings
+	print aggregate_pings
