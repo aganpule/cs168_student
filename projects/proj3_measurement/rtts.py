@@ -13,7 +13,6 @@ import json
 def run_ping(hostnames, num_packets, raw_ping_output_filename, aggregated_ping_output_filename):
 	raw_pings, aggregate_pings = dict(), dict()
 	for host in hostnames:
-		# Ping host num_packets times
 		host = host.strip()
 		print host
 		try:
@@ -52,4 +51,5 @@ def plot_ping_cdf(raw_ping_results_filename, output_cdf_filename):
 
 if __name__ == '__main__':
 	with open('alexa_top_100', 'r') as f:
-		run_ping(f.readlines(), 10, 'rtt_a_raw.json', 'rtt_a_agg.json')
+		# run_ping(f.readlines(), 10, 'rtt_a_raw.json', 'rtt_a_agg.json')
+		run_ping(['google.com', 'todayhumor.co.kr', 'zanvarsity.ac.tz', 'taobao.com'], 500, 'rtt_b_raw.json', 'rtt_b_agg.json')
