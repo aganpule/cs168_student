@@ -18,7 +18,7 @@ def run_ping(hostnames, num_packets, raw_ping_output_filename, aggregated_ping_o
 			pings = p.findall(output)
 			successes = []
 			for seq_no, time in pings:
-				raw_pings[host][int(seq_no)] = float(time)
+				raw_pings[host][inpt(seq_no)] = float(time)
 				successes.append(float(time))
 			aggregate_pings[host] = {
 				'drop_rate': 100 * (num_packets - len(successes)) / float(num_packets),
@@ -37,16 +37,13 @@ def run_ping(hostnames, num_packets, raw_ping_output_filename, aggregated_ping_o
 		json.dump(aggregate_pings, f)
 
 def plot_median_rtt_cdf(agg_ping_results_filename, output_cdf_filename):
-
 	with open('output/' + agg_ping_results_filename, 'r') as f:
 		aggregate_pings = json.load(f)
 		medians = [aggregate_pings[site]['median_rtt'] for site in aggregate_pings]
-		medians = sorted(filter(lambda x: x != -1.0, medians))
-		frac = 1 / float(len(medians))
-		medians = [0.0] + medians
-		plt.step(medians, np.arange(0, 1+frac, frac))
+		medians = [0.0] + sorted(filter(lambda x: x != -1.0, medians))
+		plt.step(medians, np.linspace(0, 1, len(medians)))
 		plt.grid()
-		plt.xlabel("Median RTT")
+		plt.xlabel("Median RTT (ms)")
 		plt.ylabel("Cumulative Fraction")
 		plt.title('CDF of Median RTTs')
 		plt.show()
@@ -54,6 +51,16 @@ def plot_median_rtt_cdf(agg_ping_results_filename, output_cdf_filename):
 def plot_ping_cdf(raw_ping_results_filename, output_cdf_filename):
 	with open('output/' + raw_ping_results_filename, 'r') as f:
 		raw_pings = json.load(f)
+		for site in raw_pings:
+			pings = [0.0] + filter(lambda x: x != -1.0, raw_pings[site])
+			pprint.pprint(sorted(pings)[-1])
+			plt.step(pings, np.linspace(0, 1, len(pings)), label=site)
+		plt.legend()
+		plt.grid()
+		plt.xlabel('RTT (ms)')
+		plt.ylabel('Cumulative Fraction')
+		plt.title('CDF of Ping RTTs by Site')
+		plt.show()
 
 def find_num_no_response():
 	with open('output/rtt_a_agg.json', 'r') as f:
@@ -70,4 +77,4 @@ if __name__ == '__main__':
 	# 	run_ping(f.readlines(), 10, 'rtt_a_raw.json', 'rtt_a_agg.json')
 		# run_ping(['google.com', 'todayhumor.co.kr', 'zanvarsity.ac.tz', 'taobao.com'], 500, 'rtt_b_raw.json', 'rtt_b_agg.json')
 	plot_median_rtt_cdf('rtt_a_agg.json', None)
-
+	plot_ping_cdf('rtt_b_raw.json', None)
