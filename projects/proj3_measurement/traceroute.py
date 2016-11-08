@@ -20,7 +20,7 @@ def run_traceroute(hostnames, num_packets, output_filename):
 
 def parse_traceroute(raw_traceroute_filename, output_filename): 
 
-	regex = re.compile('(.*)\[AS(\d+)\]\s+(.*)\s+\((.*)\)|(\d+)*\s+(\*\s*[\*\s]*)')
+	regex = re.compile('(.*)\[(.*)\]\s+(.*)\s+\((.*)\)|(\d+)*\s+(\*\s*[\*\s]*)')
 	hostname = re.compile('this is host: (.*)')
 	lines = [line.rstrip('\n') for line in open(raw_traceroute_filename)]
 	t = lines[0]
@@ -37,12 +37,13 @@ def parse_traceroute(raw_traceroute_filename, output_filename):
 			i = 0
 			match = regex.findall(line)
 			if match:
-				# print match
+				print match
 				seq_n, asn, name, ip, error_seq, error = match[0]
 				num_regex = re.compile('(\d+)')
 				num = num_regex.findall(seq_n)
 				if num:
 					i = int(num[0]) - 1
+					print ("adding a new list")
 					trace_out[host].append([])
 				if error:
 					if error_seq:
@@ -50,22 +51,25 @@ def parse_traceroute(raw_traceroute_filename, output_filename):
 						trace_out[host].append([])
 					trace_out[host][i].append({'name': "None", "ip":"None", "ASN":"None"})
 				else:
-					# print ("adding entry " + str(i))
-					# print ("ASN: " + asn)
-					trace_out[host][i].append({'name':name, 'ip':ip, "ASN":asn})
-					
+					asn_match = re.compile('AS(\d+)')
+					a = asn_match.findall(asn)
+					if '*' in asn or a[0] == '0':
+						trace_out[host][i].append({'name':name, 'ip':ip, "ASN":"None"})
+					else:
+						trace_out[host][i].append({'name':name, 'ip':ip, "ASN":asn[0]})
+
 		#case where this is from the server
 
 
 	print trace_out
 
-	if not os.path.exists(output_filename):
-		with open(output_filename, 'a') as f:
-			json.dump(trace_out, f)
-	else:
-		with open(output_filename, 'a') as f:
-			f.write('\n')
-			json.dump(trace_out, f)
+	# if not os.path.exists(output_filename):
+	# 	with open(output_filename, 'a') as f:
+	# 		json.dump(trace_out, f)
+	# else:
+	# 	with open(output_filename, 'a') as f:
+	# 		f.write('\n')
+	# 		json.dump(trace_out, f)
 			
 
 if __name__ == '__main__':
