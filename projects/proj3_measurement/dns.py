@@ -142,71 +142,30 @@ def count_different_dns_responses(filename1, filename2):
                         if result_type == 'A' or result_type == 'CNAME':
                             data = answer[utils.ANSWER_DATA_KEY]
                             responses[hostname].add(data)
-    count = 0
+    count1 = 0
     for hostname in responses:
         if len(responses[hostname]) > 1:
-            count += 1
-    return count
-    # responses = {}
-    # has_differences = set()
-    # with open(filename1, 'r') as f:
-    #     dig_results = json.load(f)
-    #     for result in dig_results:
-    #         hostname = result[utils.NAME_KEY]
-    #         if result[utils.SUCCESS_KEY]:
-    #             for query in result[utils.QUERIES_KEY]:
-    #                 for answer in query[utils.ANSWERS_KEY]:
-    #                     result_type = answer[utils.TYPE_KEY]
-    #                     if result_type == 'A' or result_type == 'CNAME':
-    #                         data = answer[utils.ANSWER_DATA_KEY]
-    #                         print data
-    #                         if hostname not in responses:
-    #                             responses[hostname] = data
-    #                         elif responses[hostname] != data:
-    #                             has_differences.add(hostname)
-    # responses = {}
-    # has_differences2 = set()
-    # with open(filename1, 'r') as f:
-    #     dig_results = json.load(f)
-    #     for result in dig_results:
-    #         hostname = result[utils.NAME_KEY]
-    #         if result[utils.SUCCESS_KEY]:
-    #             for query in result[utils.QUERIES_KEY]:
-    #                 for answer in query[utils.ANSWERS_KEY]:
-    #                     result_type = answer[utils.TYPE_KEY]
-    #                     if result_type == 'A' or result_type == 'CNAME':
-    #                         data = answer[utils.ANSWER_DATA_KEY]
-    #                         if hostname not in responses:
-    #                             responses[hostname] = data
-    #                         elif responses[hostname] != data:
-    #                             has_differences2.add(hostname)
-    # # print responses
-    # print has_differences == has_differences2
-    # print ''
-    # print has_differences2
-    # print ''
-    # print has_differences.union(has_differences2)
-    # print ''
-
-    # return len(has_differences), len(has_differences.union(has_differences2))
-    # num_differences = sum([1 if len(responses[hostname]) > 1 else 0 for hostname in responses])
-    # with open(filename2, 'r') as f:
-    #     dig_results = json.load(f)
-    #     for result in dig_results:
-    #         hostname = result[utils.NAME_KEY]
-    #         if result[utils.SUCCESS_KEY]:
-    #             for query in result[utils.QUERIES_KEY]:
-    #                 for answer in query[utils.ANSWERS_KEY]:
-    #                     result_type = answer[utils.TYPE_KEY]
-    #                     if result_type == 'A' or result_type == 'CNAME':
-    #                         data = answer[utils.ANSWER_DATA_KEY]
-    #                         responses[hostname].add(str(data))
-    # num_differences2 = sum([1 if len(responses[hostname]) > 1 else 0 for hostname in responses])
-    # return num_differences, num_differences2
+            count1 += 1
+    with open(filename2, 'r') as f:
+        dig_results = json.load(f)
+        for result in dig_results:
+            hostname = result[utils.NAME_KEY]
+            if result[utils.SUCCESS_KEY]:
+                for query in result[utils.QUERIES_KEY]:
+                    for answer in query[utils.ANSWERS_KEY]:
+                        result_type = answer[utils.TYPE_KEY]
+                        if result_type == 'A' or result_type == 'CNAME':
+                            data = answer[utils.ANSWER_DATA_KEY]
+                            responses[hostname].add(data)
+    count2 = 0
+    for hostname in responses:
+        if len(responses[hostname]) > 1:
+            count2 += 1
+    return count1, count2
 
 if __name__ == '__main__':
     # run_dig('alexa_top_100', 'test.json', '80.65.225.62')
-    # run_dig('alexa_top_100', 'dns_output_3.json')
+    # run_dig('alexa_top_100', 'dns_output_4.json')
     # print get_average_ttls('dig_output.json')
     # print get_average_ttls('dig_output2.json')
     # print get_average_times('dns_output_1.json')
@@ -215,7 +174,6 @@ if __name__ == '__main__':
     # with open('dns_output_3.json', 'r') as f:
     #     d = json.load(f)
     #     pprint.pprint(d)
-    d=  count_different_dns_responses('dns_output_1.json', 'dns_output_2.json')
-    print d
-    # print count_different_dns_responses('dns_output_2.json', 'dns_output_3.json')
-    # print count_different_dns_responses('test.json', 'dns_output_3.json')
+    print count_different_dns_responses('dns_output_3.json', 'dns_output_4.json')
+    print count_different_dns_responses('dns_output_3.json', 'test.json')
+    # print count_different_dns_responses('dns_output_3.json', 'test.json')
