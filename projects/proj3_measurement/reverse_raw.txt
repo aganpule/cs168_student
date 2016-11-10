@@ -1,0 +1,70 @@
+1478653492.630565
+this is host: tpr-route-server.saix.net
+type= server
+ 1 tpr-ip-esr-1-fe-1-0-3.telkom-ipnet.co.za (196.25.9.45) 4 msec 0 msec 0 msec
+ 2 lon-ip-hsll-1-gig-0-1-0.telkom-ipnet.co.za (196.43.9.46) 168 msec 168 msec 168 msec
+ 3 tenge7-2.var01.ldn04.pccwbtn.net (63.218.243.17) 244 msec 180 msec 180 msec
+ 4  *  *  *
+ 5 xe-7-0-0.0.rtsw.losa.net.internet2.edu (64.57.20.247) [AS 11164] 340 msec 344 msec 340 msec
+ 6 64.57.20.83 () [AS 11164] 340 msec 340 msec 340 msec
+ 7 dc-lax-agg6--lax-agg7-100g.cenic.net (137.164.11.10) [AS 2152] 340 msec 340 msec 340 msec
+ 8 dc-svl-agg4--lax-agg6-100ge.cenic.net (137.164.11.1) [AS 2152] 344 msec 344 msec 344 msec
+ 9 dc-oak-agg4--svl-agg4-100ge.cenic.net (137.164.46.144) [AS 2152] 348 msec 344 msec 348 msec
+ 10 ucb--oak-agg4-10g.cenic.net (137.164.50.31) [AS 2152] 400 msec 404 msec 412 msec
+ 11 t2-3.inr-201-sut.berkeley.edu (128.32.0.37) [AS 25] 392 msec 388 msec
+    t2-3.inr-202-reccev.berkeley.edu (128.32.0.39) [AS 25] 392 msec
+ 12 xe-1-1-0.inr-306-sut.berkeley.edu (128.32.0.59) [AS 25] 384 msec
+    xe-1-0-0.inr-306-sut.berkeley.edu (128.32.0.57) [AS 25] 400 msec 404 msec
+
+this is host: route-server.ip-plus.net
+type= normal
+ 1  [AS0] xe-1-2-0-512.inr-306-sut.berkeley.edu (10.142.28.1)  2.885 ms  4.201 ms  3.131 ms
+ 2  [AS25] t5-4.inr-202-reccev.berkeley.edu (128.32.0.58)  2.273 ms  3.383 ms  3.124 ms
+ 3  [AS25] xe-5-2-0.inr-001-sut.berkeley.edu (128.32.0.66)  3.573 ms  3.276 ms  7.432 ms
+ 4  [AS2152] dc-sfo-agg-1--ucb-10ge.cenic.net (137.164.50.16)  3.539 ms  3.327 ms  3.006 ms
+ 5  [AS2152] dc-svl-agg4--sfo-agg1-10ge-2.cenic.net (137.164.22.7)  46.196 ms  49.659 ms  50.231 ms
+ 6  [AS0] xe-1-1-0.0.rtr.paix.net.internet2.edu (64.57.21.6)  50.437 ms
+    [AS0] xe-0-1-0.0.rtr.paix.net.internet2.edu (64.57.21.4)  53.880 ms
+    [AS0] xe-1-1-0.0.rtr.paix.net.internet2.edu (64.57.21.6)  53.700 ms
+ 7  [AS0] xe-2-2-0.80.rtsw.losa.net.internet2.edu (64.57.20.124)  62.050 ms  62.229 ms  71.834 ms
+ 8  [AS0] ae-2.80.rtsw.salt.net.internet2.edu (64.57.20.145)  77.718 ms  75.200 ms  90.504 ms
+ 9  [AS0] ae-2.80.rtsw.kans.net.internet2.edu (64.57.20.147)  91.737 ms  93.934 ms  94.721 ms
+10  [AS0] ae-0.80.rtsw.chic.net.internet2.edu (64.57.20.149)  104.321 ms  96.908 ms  97.914 ms
+11  [AS0] ae-4.80.rtr.eqch.net.internet2.edu (64.57.20.151)  102.022 ms  105.450 ms  106.733 ms
+12  [AS0] equinix-chicago.bb.ip-plus.net (206.223.119.82)  162.953 ms  125.864 ms  123.302 ms
+13  [AS3303] i68geb-005-ten0-1-0-1-7.bb.ip-plus.net (138.187.159.18)  207.262 ms  406.131 ms  209.929 ms
+14  * [AS3303] route-server.ip-plus.net (193.247.171.26)  174.183 ms *
+
+this is host: route-views.oregon-ix.net
+type= server
+ 1 vl-51.uonet1-gw.uoregon.edu (128.223.51.2) [AS 3582] 1 msec 1 msec 0 msec
+ 2 128.223.2.9 () [AS 3582] 2 msec 2 msec 2 msec
+ 3 internet2-re1-gw.oregon-gigapop.net (198.32.165.126) [AS 58511] 24 msec 24 msec 24 msec
+ 4 hpr-lax-hpr2--i2-r&e.cenic.net (137.164.26.200) [AS 2153] 25 msec 24 msec 24 msec
+ 5 hpr-svl-hpr3--lax-hpr3-100ge.cenic.net (137.164.25.74) [AS 2153] 28 msec 28 msec 28 msec
+ 6 hpr-ucb--svl-hpr-10g.cenic.net (137.164.27.133) [AS 2153] 30 msec 30 msec 30 msec
+ 7 t1-3.inr-201-sut.berkeley.edu (128.32.0.65) [AS 25] 30 msec
+   t1-3.inr-202-reccev.berkeley.edu (128.32.0.67) [AS 25] 30 msec 30 msec
+ 8 xe-1-1-0.inr-306-sut.berkeley.edu (128.32.0.59) [AS 25] 30 msec
+   xe-1-0-0.inr-306-sut.berkeley.edu (128.32.0.57) [AS 25] 30 msec
+   xe-1-1-0.inr-306-sut.berkeley.edu (128.32.0.59) [AS 25] 30 msec
+
+this is host: route-views.on.bb.telus.com
+type= server
+ 1 toroonxngr00.bb.telus.com (154.11.63.85) [AS 852] 92 msec 0 msec 196 msec
+ 2 154.11.6.33 () [AS 852] 20 msec 112 msec 4 msec
+ 3 NYCMNY83CI01.bb.telus.com (75.154.223.252) 16 msec 16 msec 12 msec
+ 4 rtr.loss.net.internet2.edu (198.32.118.161) 16 msec 12 msec 12 msec
+ 5 ae-0.0.rtr.eqch.net.internet2.edu (64.57.20.33) [AS 11164] 28 msec 28 msec 32 msec
+ 6 ae-1.80.rtsw.chic.net.internet2.edu (64.57.20.150) [AS 11164] 28 msec 28 msec 32 msec
+ 7 ae-0.80.rtsw.kans.net.internet2.edu (64.57.20.148) [AS 11164] 40 msec 40 msec 40 msec
+ 8 ae-0.80.rtsw.salt.net.internet2.edu (64.57.20.146) [AS 11164] 64 msec 60 msec 60 msec
+ 9 ae-2.80.rtsw.losa.net.internet2.edu (64.57.20.144) [AS 11164] 80 msec 80 msec 88 msec
+ 10 64.57.20.83 () [AS 11164] 84 msec 84 msec 84 msec
+ 11 dc-lax-agg6--lax-agg7-100g.cenic.net (137.164.11.10) [AS 2152] 88 msec 88 msec 88 msec
+ 12 dc-svl-agg4--lax-agg6-100ge.cenic.net (137.164.11.1) [AS 2152] 84 msec 84 msec 84 msec
+ 13 dc-oak-agg4--svl-agg4-100ge.cenic.net (137.164.46.144) [AS 2152] 84 msec 84 msec 88 msec
+ 14 ucb--oak-agg4-10g.cenic.net (137.164.50.31) [AS 2152] 88 msec 92 msec 88 msec
+ 15 t2-3.inr-201-sut.berkeley.edu (128.32.0.37) [AS 25] 84 msec 88 msec
+    t2-3.inr-202-reccev.berkeley.edu (128.32.0.39) [AS 25] 84 msec
+ 16 xe-1-1-0.inr-306-sut.berkeley.edu (128.32.0.59) [AS 25] 88 msec 88 msec 84 msec

@@ -1,0 +1,90 @@
+1478684350.34
+this is host: tpr-route-server.saix.net
+type= normal
+ 1  [AS0] 10.0.0.1 (10.0.0.1)  11.523 ms  8.983 ms  41.180 ms  16.257 ms  22.534 ms
+ 2  [AS7922] 96.120.89.245 (96.120.89.245)  63.793 ms  19.428 ms  12.454 ms  15.104 ms  13.080 ms
+ 3  [AS33651] te-0-4-0-18-sur03.pinole.ca.sfba.comcast.net (68.87.195.33)  19.191 ms  15.024 ms  23.541 ms  11.394 ms  20.474 ms
+ 4  [AS7922] be-224-rar01.pinole.ca.sfba.comcast.net (162.151.78.185)  20.317 ms  15.427 ms  13.700 ms  12.978 ms  12.914 ms
+ 5  [AS33668] hu-0-1-0-4-ar01.santaclara.ca.sfba.comcast.net (68.85.154.25)  31.286 ms
+    [AS33668] hu-0-1-0-0-ar01.santaclara.ca.sfba.comcast.net (68.85.154.33)  22.119 ms
+    [AS33668] hu-0-1-0-3-ar01.santaclara.ca.sfba.comcast.net (68.85.154.45)  19.562 ms  37.269 ms
+    [AS33668] hu-0-1-0-4-ar01.santaclara.ca.sfba.comcast.net (68.85.154.25)  50.532 ms
+ 6  [AS7922] be-33651-cr01.sunnyvale.ca.ibone.comcast.net (68.86.90.93)  27.388 ms  15.966 ms  38.535 ms  31.463 ms  120.358 ms
+ 7  [AS7922] be-10925-cr01.9greatoaks.ca.ibone.comcast.net (68.86.87.158)  22.293 ms  17.066 ms  22.233 ms  22.432 ms  27.295 ms
+ 8  [AS7922] hu-0-16-0-0-pe03.11greatoaks.ca.ibone.comcast.net (68.86.86.242)  24.736 ms  21.395 ms  20.088 ms  16.334 ms  21.073 ms
+ 9  [AS2914] ae-13.r02.snjsca04.us.bb.gin.ntt.net (129.250.66.33)  22.722 ms  16.087 ms  20.027 ms  29.163 ms  25.177 ms
+10  [AS2914] ae-11.r22.snjsca04.us.bb.gin.ntt.net (129.250.3.120)  15.702 ms  19.027 ms  20.790 ms  21.707 ms  20.587 ms
+11  [AS2914] ae-7.r23.asbnva02.us.bb.gin.ntt.net (129.250.6.238)  97.591 ms  112.616 ms  92.541 ms  92.154 ms  86.732 ms
+12  [AS2914] ae-0.r22.asbnva02.us.bb.gin.ntt.net (129.250.3.84)  85.107 ms  94.589 ms  162.961 ms  83.088 ms  180.567 ms
+13  [AS2914] ae-8.r20.frnkge04.de.bb.gin.ntt.net (129.250.4.97)  180.426 ms  170.612 ms  184.353 ms  277.995 ms  176.615 ms
+14  [AS2914] ae-2.r02.frnkge04.de.bb.gin.ntt.net (129.250.3.94)  173.247 ms  179.678 ms  177.430 ms  176.400 ms  186.794 ms
+15  [AS2914] 212.119.15.66 (212.119.15.66)  170.742 ms  173.695 ms  171.379 ms  167.905 ms  181.153 ms
+16  [AS5713] tpr-ip-esr-1-gig-6-0-0.telkom-ipnet.co.za (196.43.10.86)  394.421 ms  352.435 ms  413.348 ms  395.787 ms  432.718 ms
+17  [AS5713] tpr-route-server.saix.net (196.25.9.46)  398.507 ms *  356.704 ms *  334.237 ms
+
+this is host: route-server.ip-plus.net
+type= normal
+ 1  [AS0] 10.0.0.1 (10.0.0.1)  4.747 ms  2.142 ms  4.824 ms  1.908 ms  7.724 ms
+ 2  [AS7922] 96.120.89.245 (96.120.89.245)  18.541 ms  14.517 ms  14.998 ms  15.062 ms  20.963 ms
+ 3  [AS33651] te-0-4-0-18-sur03.pinole.ca.sfba.comcast.net (68.87.195.33)  25.213 ms  76.730 ms  25.963 ms  19.007 ms  48.735 ms
+ 4  [AS7922] be-224-rar01.pinole.ca.sfba.comcast.net (162.151.78.185)  16.123 ms  46.673 ms  12.717 ms  14.862 ms  23.455 ms
+ 5  [AS33668] hu-0-1-0-1-ar01.santaclara.ca.sfba.comcast.net (68.85.154.37)  16.429 ms
+    [AS33668] hu-0-1-0-4-ar01.santaclara.ca.sfba.comcast.net (68.85.154.25)  18.705 ms
+    [AS33668] hu-0-1-0-5-ar01.santaclara.ca.sfba.comcast.net (68.85.154.241)  26.995 ms
+    [AS33668] hu-0-1-0-3-ar01.santaclara.ca.sfba.comcast.net (68.85.154.45)  17.445 ms
+    [AS33668] hu-0-1-0-0-ar01.santaclara.ca.sfba.comcast.net (68.85.154.33)  19.985 ms
+ 6  [AS7922] be-33651-cr01.sunnyvale.ca.ibone.comcast.net (68.86.90.93)  20.501 ms  25.390 ms  18.696 ms  17.278 ms  14.207 ms
+ 7  [AS7922] hu-0-14-0-0-pe02.529bryant.ca.ibone.comcast.net (68.86.89.234)  17.288 ms
+    [AS7922] hu-0-10-0-0-pe02.529bryant.ca.ibone.comcast.net (68.86.86.26)  18.223 ms
+    [AS7922] hu-0-12-0-1-pe02.529bryant.ca.ibone.comcast.net (68.86.87.14)  31.117 ms
+    [AS7922] hu-0-11-0-1-pe02.529bryant.ca.ibone.comcast.net (68.86.86.146)  17.111 ms
+    [AS7922] hu-0-14-0-1-pe02.529bryant.ca.ibone.comcast.net (68.86.89.230)  20.885 ms
+ 8  [AS3320] 80.156.163.153 (80.156.163.153)  29.590 ms  18.074 ms  30.883 ms  17.996 ms  32.058 ms
+ 9  [AS3320] 217.239.47.246 (217.239.47.246)  87.735 ms  90.023 ms  89.057 ms  90.204 ms  96.722 ms
+10  [AS3320] 80.157.129.210 (80.157.129.210)  187.966 ms  183.596 ms  184.163 ms  179.964 ms  185.957 ms
+11  * * * * *
+12  [AS3303] route-server.ip-plus.net (193.247.171.26)  193.692 ms *  188.874 ms *  196.565 ms
+
+this is host: route-views.oregon-ix.net
+type= normal
+ 1  [AS0] 10.0.0.1 (10.0.0.1)  23.455 ms  6.236 ms  4.585 ms  1.927 ms  6.320 ms
+ 2  [AS7922] 96.120.89.245 (96.120.89.245)  12.353 ms  18.280 ms  13.621 ms  16.564 ms  13.469 ms
+ 3  [AS33651] te-0-4-0-18-sur03.pinole.ca.sfba.comcast.net (68.87.195.33)  18.711 ms  21.165 ms  19.681 ms  18.492 ms  17.830 ms
+ 4  [AS7922] be-224-rar01.pinole.ca.sfba.comcast.net (162.151.78.185)  15.385 ms  16.304 ms  13.838 ms  38.661 ms  21.258 ms
+ 5  [AS33668] hu-0-1-0-5-ar01.santaclara.ca.sfba.comcast.net (68.85.154.241)  24.908 ms
+    [AS33668] hu-0-1-0-2-ar01.santaclara.ca.sfba.comcast.net (68.85.154.41)  23.491 ms
+    [AS33668] hu-0-1-0-3-ar01.santaclara.ca.sfba.comcast.net (68.85.154.45)  17.110 ms
+    [AS33668] hu-0-1-0-5-ar01.santaclara.ca.sfba.comcast.net (68.85.154.241)  18.613 ms
+    [AS33668] hu-0-1-0-0-ar01.santaclara.ca.sfba.comcast.net (68.85.154.33)  31.802 ms
+ 6  [AS7922] be-33651-cr01.sunnyvale.ca.ibone.comcast.net (68.86.90.93)  48.962 ms  14.119 ms  24.590 ms  15.898 ms  19.120 ms
+ 7  [AS7922] hu-0-13-0-0-pe02.529bryant.ca.ibone.comcast.net (68.86.86.94)  18.914 ms
+    [AS7922] hu-0-10-0-1-pe02.529bryant.ca.ibone.comcast.net (68.86.86.30)  87.832 ms
+    [AS7922] hu-0-10-0-0-pe02.529bryant.ca.ibone.comcast.net (68.86.86.26)  26.042 ms
+    [AS7922] hu-0-10-0-1-pe02.529bryant.ca.ibone.comcast.net (68.86.86.30)  19.540 ms
+    [AS7922] hu-0-11-0-0-pe02.529bryant.ca.ibone.comcast.net (68.86.86.70)  18.450 ms
+ 8  [AS33668] 66.208.233.122 (66.208.233.122)  16.637 ms  24.220 ms  21.171 ms  17.230 ms  27.334 ms
+ 9  [AS0] xe-2-2-0.80.rtsw.losa.net.internet2.edu (64.57.20.124)  23.775 ms  31.542 ms  29.138 ms  26.500 ms  23.585 ms
+10  * * * * *
+11  [AS3582] vl-2.uonet2-gw.uoregon.edu (128.223.2.2)  50.840 ms  50.158 ms  49.035 ms
+    [AS3582] vl-2-gw.uoregon.edu (128.223.2.1)  50.712 ms  49.285 ms
+12  [AS3582] route-views.routeviews.org (128.223.51.103)  70.075 ms *  115.544 ms *  100.695 ms
+
+this is host: route-views.on.bb.telus.com
+type= normal
+ 1  [AS0] 10.0.0.1 (10.0.0.1)  10.406 ms  4.271 ms  3.663 ms  4.417 ms  3.899 ms
+ 2  [AS7922] 96.120.89.245 (96.120.89.245)  19.579 ms  27.358 ms  22.670 ms  30.187 ms  27.527 ms
+ 3  * [AS33651] te-0-4-0-18-sur03.pinole.ca.sfba.comcast.net (68.87.195.33)  14.845 ms  21.178 ms  19.572 ms  18.449 ms
+ 4  [AS7922] be-224-rar01.pinole.ca.sfba.comcast.net (162.151.78.185)  14.941 ms  15.301 ms  21.462 ms  15.671 ms  29.701 ms
+ 5  [AS33668] hu-0-1-0-5-ar01.santaclara.ca.sfba.comcast.net (68.85.154.241)  15.865 ms
+    [AS33668] hu-0-1-0-2-ar01.santaclara.ca.sfba.comcast.net (68.85.154.41)  26.606 ms
+    [AS33668] hu-0-1-0-3-ar01.santaclara.ca.sfba.comcast.net (68.85.154.45)  15.411 ms
+    [AS33668] hu-0-1-0-5-ar01.santaclara.ca.sfba.comcast.net (68.85.154.241)  16.179 ms
+    [AS33668] hu-0-1-0-0-ar01.santaclara.ca.sfba.comcast.net (68.85.154.33)  18.783 ms
+ 6  [AS7922] be-33651-cr01.sunnyvale.ca.ibone.comcast.net (68.86.90.93)  20.207 ms  26.617 ms  19.202 ms  16.970 ms  23.722 ms
+ 7  [AS7922] be-10925-cr01.9greatoaks.ca.ibone.comcast.net (68.86.87.158)  20.003 ms  19.099 ms  24.834 ms  56.854 ms  23.288 ms
+ 8  [AS7922] be-10825-cr01.seattle.wa.ibone.comcast.net (68.86.85.197)  51.615 ms  46.110 ms  45.427 ms  39.651 ms  41.267 ms
+ 9  [AS7922] hu-0-12-0-0-pe05.seattle.wa.ibone.comcast.net (68.86.84.54)  39.535 ms  41.365 ms  36.039 ms  35.808 ms  34.797 ms
+10  [AS7922] as852.seattle.wa.ibone.comcast.net (173.167.56.58)  39.420 ms  36.333 ms  35.229 ms  34.736 ms  34.987 ms
+11  [AS852] toroonxndr02.bb.telus.com (154.11.6.99)  142.616 ms  159.350 ms  290.306 ms  276.544 ms  303.242 ms
+12  [AS852] route-views.on.bb.telus.com (154.11.63.86)  197.113 ms *  98.545 ms *  105.129 ms
+
