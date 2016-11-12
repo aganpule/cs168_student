@@ -5,6 +5,7 @@ import numpy as np
 import json
 import pprint
 import matplotlib.pyplot as plt
+from matplotlib.backends import backend_pdf
 
 def run_ping(hostnames, num_packets, raw_ping_output_filename, aggregated_ping_output_filename):
 	raw_pings, aggregate_pings = dict(), dict()
@@ -31,13 +32,13 @@ def run_ping(hostnames, num_packets, raw_ping_output_filename, aggregated_ping_o
 				'max_rtt': -1.0,
 				'median_rtt': -1.0
 			}
-	with open('output/' + raw_ping_output_filename, 'w') as f:
+	with open(raw_ping_output_filename, 'w') as f:
 		json.dump(raw_pings, f)
-	with open('output/' + aggregated_ping_output_filename, 'w') as f:
+	with open(aggregated_ping_output_filename, 'w') as f:
 		json.dump(aggregate_pings, f)
 
 def plot_median_rtt_cdf(agg_ping_results_filename, output_cdf_filename):
-	with open('output/' + agg_ping_results_filename, 'r') as f:
+	with open(agg_ping_results_filename, 'r') as f:
 		aggregate_pings = json.load(f)
 		medians = [aggregate_pings[site]['median_rtt'] for site in aggregate_pings]
 		medians = [0.0] + sorted(filter(lambda x: x != -1.0, medians))
@@ -46,35 +47,36 @@ def plot_median_rtt_cdf(agg_ping_results_filename, output_cdf_filename):
 		plt.xlabel("Median RTT (ms)")
 		plt.ylabel("Cumulative Fraction")
 		plt.title('CDF of Median RTTs')
-		plt.show()
+ 	 	with backend_pdf.PdfPages(output_cdf_filename) as pdf:
+			pdf.savefig()
 
 def plot_ping_cdf(raw_ping_results_filename, output_cdf_filename):
-	with open('output/' + raw_ping_results_filename, 'r') as f:
+	with open(raw_ping_results_filename, 'r') as f:
 		raw_pings = json.load(f)
 		for site in raw_pings:
 			pings = [0.0] + filter(lambda x: x != -1.0, raw_pings[site])
-			pprint.pprint(sorted(pings)[-1])
 			plt.step(pings, np.linspace(0, 1, len(pings)), label=site)
 		plt.legend()
 		plt.grid()
 		plt.xlabel('RTT (ms)')
 		plt.ylabel('Cumulative Fraction')
 		plt.title('CDF of Ping RTTs by Site')
-		plt.show()
+ 	 	with backend_pdf.PdfPages(output_cdf_filename) as pdf:
+			pdf.savefig()
 
 def find_num_no_response():
-	with open('output/rtt_a_agg.json', 'r') as f:
+	with open('rtt_a_agg.json', 'r') as f:
 		aggregate_pings = json.load(f)
 		return sum([1 if aggregate_pings[site]['median_rtt'] == -1.0 else 0 for site in aggregate_pings])
 
 def find_num_at_least_one_failure():
-	with open('output/rtt_a_raw.json', 'r') as f:
+	with open('rtt_a_raw.json', 'r') as f:
 		raw_pings = json.load(f)
 		return sum([1 if -1.0 in raw_pings[site] else 0 for site in raw_pings])
 
 if __name__ == '__main__':
-	# with open('alexa_top_100', 'r') as f:
-	# 	run_ping(f.readlines(), 10, 'rtt_a_raw.json', 'rtt_a_agg.json')
-		# run_ping(['google.com', 'todayhumor.co.kr', 'zanvarsity.ac.tz', 'taobao.com'], 500, 'rtt_b_raw.json', 'rtt_b_agg.json')
-	plot_median_rtt_cdf('rtt_a_agg.json', None)
-	plot_ping_cdf('rtt_b_raw.json', None)
+	with open('alexa_top_100', 'r') as f:
+		run_ping(f.readlines(), 10, 'rtt_a_raw.json', 'rtt_a_agg.json')
+		run_ping(['google.com', 'todayhumor.co.kr', 'zanvarsity.ac.tz', 'taobao.com'], 500, 'rtt_b_raw.json', 'rtt_b_agg.json')
+	plot_median_rtt_cdf('rtt_a_agg.json', 'median_rtt_cdf.pdf')
+	plot_ping_cdf('rtt_b_raw.json','ping_cdf.pdf')

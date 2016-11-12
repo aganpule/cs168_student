@@ -6,6 +6,7 @@ import utils
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
+from matplotlib.backends import backend_pdf
 
 def run_dig(hostname_filename, output_filename, dns_query_server=None):
     with open(hostname_filename, 'r') as f:
@@ -127,7 +128,9 @@ def generate_time_cdfs(json_filename, output_filename):
     plt.xlabel('Time (ms)')
     plt.ylabel('Cumulative Fraction')
     plt.title('CDF of DNS Times')
-    plt.show()
+    with backend_pdf.PdfPages(output_filename) as pdf:
+      pdf.savefig()
+
 
 def count_different_dns_responses(filename1, filename2):
     responses = defaultdict(set)
@@ -143,9 +146,11 @@ def count_different_dns_responses(filename1, filename2):
                             data = answer[utils.ANSWER_DATA_KEY]
                             responses[hostname].add(data)
     count1 = 0
+    different1 = set()
     for hostname in responses:
         if len(responses[hostname]) > 1:
             count1 += 1
+            different1.add(str(hostname))
     with open(filename2, 'r') as f:
         dig_results = json.load(f)
         for result in dig_results:
@@ -158,22 +163,19 @@ def count_different_dns_responses(filename1, filename2):
                             data = answer[utils.ANSWER_DATA_KEY]
                             responses[hostname].add(data)
     count2 = 0
+    different2 = set()
     for hostname in responses:
         if len(responses[hostname]) > 1:
             count2 += 1
+            different2.add(str(hostname))
+    print different2.difference(different1)
     return count1, count2
 
 if __name__ == '__main__':
-    # run_dig('alexa_top_100', 'test.json', '80.65.225.62')
-    # run_dig('alexa_top_100', 'dns_output_4.json')
-    # print get_average_ttls('dig_output.json')
-    # print get_average_ttls('dig_output2.json')
-    # print get_average_times('dns_output_1.json')
-    # generate_time_cdfs('dns_output_1.json', None)
-    # generate_time_cdfs('dns_output_2.json', None)
-    # with open('dns_output_3.json', 'r') as f:
-    #     d = json.load(f)
-    #     pprint.pprint(d)
-    print count_different_dns_responses('dns_output_3.json', 'dns_output_4.json')
-    print count_different_dns_responses('dns_output_3.json', 'test.json')
-    # print count_different_dns_responses('dns_output_3.json', 'test.json')
+    run_dig('alexa_top_100', 'dns_output_2.json')
+    run_dig('alexa_top_100', 'dns_output_other_server.json', '80.65.225.62')
+    print get_average_ttls('dns_output_1.json')
+    print get_average_times('dns_output_1.json')
+    generate_time_cdfs('dns_output_1.json', "dns_plot.pdf")
+    print count_different_dns_responses('dns_output_1.json', 'dns_output_2.json')
+    print count_different_dns_responses('dns_output_1.json', 'dns_output_other_server.json')
