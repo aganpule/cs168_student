@@ -76,11 +76,11 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 to_send = to_send[utils.MAX_PACKET_SIZE:]
 
     def find_hash(self, src, dest, hashed):
-        if dest in self.hashtable[src]:
-            if hashed in self.hashtable[src][dest]:
-                return self.hashtable[src][dest][hashed]
+        if hashed in self.hashtable[(src, dest)]:
+            return self.hashtable[(src, dest)][hashed]
+        if hashed in self.hashtable[(dest, src)]:
+            return self.hashtable[(dest, src)][hashed]
 
     def add_hash(self, src, dest, hashed, text):
-        if dest not in self.hashtable[src]:
-            self.hashtable[src][dest] = {}
-        self.hashtable[src][dest][hashed] = text
+        self.hashtable[(src, dest)][hashed] = text
+        self.hashtable[(dest, src)][hashed] = text
