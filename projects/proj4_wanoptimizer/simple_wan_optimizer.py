@@ -16,9 +16,8 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
     def __init__(self):
         wan_optimizer.BaseWanOptimizer.__init__(self)
         # Add any code that you like here (but do not add any constructor arguments).
-        self.hashtable = defaultdict(dict)
-        self.buffer = ""
-        return
+        self.hashtable = dict()
+        self.buffer = defaultdict(str)
 
     def receive(self, packet):
         """ Handles receiving a packet.
@@ -38,28 +37,27 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             if packet.is_raw_data:
                 self.send(packet, self.address_to_port[packet.dest])
             else:
-                to_send = self.find_hash(packet.src, packet.dest, packet.payload)
+                to_send = self.find_hash(packet.payload)
                 self.split_and_send(to_send, packet, self.address_to_port[packet.dest])
         else:
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
-            if packet.is_raw_data:
-                total_buffer = self.buffer + packet.payload
-                if len(total_buffer) >= self.BLOCK_SIZE:
-                    to_send = total_buffer[:self.BLOCK_SIZE]
-                    self.buffer = total_buffer[self.BLOCK_SIZE:]
-                    hashed = utils.get_hash(to_send)
-                    if self.find_hash(packet.src, packet.dest, hashed):
-                        hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
-                        self.send(hash_packet, self.wan_port)
-                    else:
-                        self.add_hash(packet.src, packet.dest, hashed, to_send)
-                        self.split_and_send(to_send, packet, self.wan_port)
+            total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
+            if len(total_buffer) >= self.BLOCK_SIZE:
+                to_send = total_buffer[:self.BLOCK_SIZE]
+                self.set_buffer(packet.src, packet.dest, total_buffer[self.BLOCK_SIZE:])
+                hashed = utils.get_hash(to_send)
+                if self.find_hash(hashed):
+                    hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
+                    self.send(hash_packet, self.wan_port)
                 else:
-                    self.buffer = total_buffer
+                    self.add_hash(hashed, to_send)
+                    self.split_and_send(to_send, packet, self.wan_port)
+            else:
+                self.set_buffer(packet.src, packet.dest, total_buffer)
             if packet.is_fin:
-                self.split_and_send(self.buffer, packet, self.wan_port)
-                self.buffer = ''
+                self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, self.wan_port)
+                self.set_buffer(packet.src, packet.dest, '')
 
     def split_and_send(self, to_send, packet, dest):
         original_packet = packet
@@ -75,12 +73,15 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 self.send(packet, dest)
                 to_send = to_send[utils.MAX_PACKET_SIZE:]
 
-    def find_hash(self, src, dest, hashed):
-        if hashed in self.hashtable[(src, dest)]:
-            return self.hashtable[(src, dest)][hashed]
-        if hashed in self.hashtable[(dest, src)]:
-            return self.hashtable[(dest, src)][hashed]
+    def find_hash(self, hashed):
+        if hashed in self.hashtable:
+            return self.hashtable[hashed]
 
-    def add_hash(self, src, dest, hashed, text):
-        self.hashtable[(src, dest)][hashed] = text
-        self.hashtable[(dest, src)][hashed] = text
+    def add_hash(self, hashed, text):
+        self.hashtable[hashed] = text
+
+    def set_buffer(self, src, dest, s):
+        self.buffer[(src, dest)] = s
+
+    def get_buffer(self, src, dest):
+        return self.buffer[(src, dest)]
