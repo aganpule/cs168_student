@@ -57,15 +57,17 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 else:
                     self.buffer = total_buffer
             if packet.is_fin:
-                # packet = Packet(packet.src, packet.dest, True, True, self.buffer)
+                # packet = Packet(packet.src, packet.dest, True, True, '')
+                # self.send(packet, self.wan_port)
                 self.split_and_send(self.buffer, packet, self.wan_port)
                 self.buffer = ''
 
     def split_and_send(self, to_send, packet, dest):
+        original_packet = packet
         while True:
             if len(to_send) < utils.MAX_PACKET_SIZE:
                 payload = to_send
-                packet = Packet(packet.src, packet.dest, True, packet.is_fin, payload)
+                packet = Packet(packet.src, packet.dest, True, original_packet.is_fin, payload)
                 self.send(packet, dest)
                 return
             else:
