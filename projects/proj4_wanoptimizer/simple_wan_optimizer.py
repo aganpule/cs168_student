@@ -34,14 +34,12 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
         if packet.dest in self.address_to_port:
             # The packet is destined to one of the clients connected to this middlebox;
             # send the packet there.
-            if packet.is_raw_data:
-                self.send(packet, self.address_to_port[packet.dest])
-            else:
-                to_send = self.find_hash(packet.payload)
-                self.split_and_send(to_send, packet, self.address_to_port[packet.dest])
+            port = self.address_to_port[packet.dest]
         else:
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
+            port = self.wan_port
+        if packet.is_raw_data:
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
             if len(total_buffer) >= self.BLOCK_SIZE:
                 to_send = total_buffer[:self.BLOCK_SIZE]
@@ -49,15 +47,18 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 hashed = utils.get_hash(to_send)
                 if self.find_hash(hashed):
                     hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
-                    self.send(hash_packet, self.wan_port)
+                    self.send(hash_packet, port)
                 else:
                     self.add_hash(hashed, to_send)
-                    self.split_and_send(to_send, packet, self.wan_port)
+                    self.split_and_send(to_send, packet, port)
             else:
                 self.set_buffer(packet.src, packet.dest, total_buffer)
-            if packet.is_fin:
-                self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, self.wan_port)
-                self.set_buffer(packet.src, packet.dest, '')
+        else:
+            to_send = self.find_hash(packet.payload)
+            self.split_and_send(to_send, packet, port)
+        if packet.is_fin:
+            self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, port)
+            self.set_buffer(packet.src, packet.dest, '')
 
     def split_and_send(self, to_send, packet, dest):
         original_packet = packet
