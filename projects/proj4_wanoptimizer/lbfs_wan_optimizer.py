@@ -13,6 +13,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
     # The string of bits to compare the lower order 13 bits of hash to
     GLOBAL_MATCH_BITSTRING = '0111011001010'
     WINDOW_SIZE = 48
+    BITSTRING_LENGTH = 13
 
     def __init__(self):
         wan_optimizer.BaseWanOptimizer.__init__(self)
@@ -47,43 +48,58 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
             curr_offset = self.get_curr_offset(packet.src, packet.dest)
 
-            if len(total_buffer) < 48:
+            if len(total_buffer) < self.WINDOW_SIZE:
                 block_hash = utils.get_hash(total_buffer)
                 self.set_buffer(packet.src, packet.dest, '', 0)
                 if self.find_hash(block_hash):
-                    hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
+                    hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
+                    print("Sending hash from %s to %s", str(packet.src), str(packet.dest))
                     self.send(hash_packet, port)
                 else:
                     self.add_hash(block_hash, total_buffer)
+                    print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
                     self.split_and_send(total_buffer, packet, port)
                 #don't compute hash, just send
-            end_range = curr_offset + self.WINDOW_SIZE 
-            while curr_offset <= len(total_buffer) - self.WINDOW_SIZE:
-                delimiter_hash = utils.get_hash(total_buffer[curr_offset:end_range])
-                if utils.get_last_n_bits(delimiter_hash, 13) == self.GLOBAL_MATCH_BITSTRING:
-                    to_send = total_buffer[:end_range]
-                    block_hash = utils.get_hash(to_send)
-                    #set the buffer, and reset curr_offset to 0
-                    self.set_buffer(packet.src, packet.dest, total_buffer[end_range:], 0)
-                    if self.find_hash(block_hash):
-                        #send hash
-                        hash_packet = Packet(packet.src, packet.dest, False, False, block_hash) #is_fin should be False?
-                        self.send(hash_packet, port)
+            else:
+                end_range = curr_offset + self.WINDOW_SIZE 
+                while end_range <= len(total_buffer):
+                    delimiter_hash = utils.get_hash(total_buffer[curr_offset:end_range])
+                    if utils.get_last_n_bits(delimiter_hash, self.BITSTRING_LENGTH) == self.GLOBAL_MATCH_BITSTRING:
+                        to_send = total_buffer[:end_range]
+                        block_hash = utils.get_hash(to_send)
+                        #set the buffer, and reset curr_offset to 0
+                        self.set_buffer(packet.src, packet.dest, total_buffer[end_range:], 0)
+                        if self.find_hash(block_hash):
+                            if self.get_buffer(packet.src, packet.dest):
+                                hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
+                                print("Sending hash from %s to %s", str(packet.src), str(packet.dest))
+                                self.send(hash_packet, port)
+                            else:
+                                hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
+                                if packet.is_fin:
+                                    print("Sending raw data + fin from %s to %s", str(packet.src), str(packet.dest))
+                                else:
+                                    print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
+                                self.send(hash_packet, port)
+                                return
+                        else:
+                            #add to hashtable
+                            self.add_hash(block_hash, to_send)
+                            #send raw data
+                            print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
+                            self.split_and_send(to_send, packet, port)
+                        break
                     else:
-                        #add to hashtable
-                        self.add_hash(block_hash, to_send)
-                        #send raw data
-                        self.split_and_send(to_send, packet, port)
-                    break
-                else:
-                    curr_offset += 1
-                    end_range += 1
-                    self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
-            #if no delimiter is found, store the entire buffer so far and update the current offset
+                        curr_offset += 1
+                        end_range += 1
+                        self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
+                #if no delimiter is found, store the entire buffer so far and update the current offset
         else:
             to_send = self.find_hash(packet.payload)
+            print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
             self.split_and_send(to_send, packet, port)
         if packet.is_fin:
+            print("Sending fin from %s to %s", str(packet.src), str(packet.dest))
             self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, port)
             self.set_buffer(packet.src, packet.dest, '', 0)
 
