@@ -1,4 +1,7 @@
 import wan_optimizer
+import utils
+from tcp_packet import Packet
+from collections import defaultdict
 
 class WanOptimizer(wan_optimizer.BaseWanOptimizer):
     """ WAN Optimizer that divides data into variable-sized
@@ -9,11 +12,13 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
 
     # The string of bits to compare the lower order 13 bits of hash to
     GLOBAL_MATCH_BITSTRING = '0111011001010'
+    WINDOW_SIZE = 48
 
     def __init__(self):
         wan_optimizer.BaseWanOptimizer.__init__(self)
         # Add any code that you like here (but do not add any constructor arguments).
-        return
+        self.hashtable = dict()
+        self.buffer = defaultdict(lambda: ['', 0])
 
     def receive(self, packet):
         """ Handles receiving a packet.
@@ -30,8 +35,87 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
         if packet.dest in self.address_to_port:
             # The packet is destined to one of the clients connected to this middlebox;
             # send the packet there.
-            self.send(packet, self.address_to_port[packet.dest])
+            port = self.address_to_port[packet.dest]
+            # self.send(packet, self.address_to_port[packet.dest])
         else:
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
-            self.send(packet, self.wan_port)
+            # self.send(packet, self.wan_port)
+            port = self.wan_port
+        if packet.is_raw_data: 
+            # compute hash, check if seen before, send packet
+            total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
+            curr_offset = self.get_curr_offset(packet.src, packet.dest)
+
+            if len(total_buffer) < 48:
+                block_hash = utils.get_hash(total_buffer)
+                self.set_buffer(packet.src, packet.dest, '', 0)
+                if self.find_hash(block_hash):
+                    hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
+                    self.send(hash_packet, port)
+                else:
+                    self.add_hash(block_hash, total_buffer)
+                    self.split_and_send(total_buffer, packet, port)
+                #don't compute hash, just send
+            end_range = curr_offset + self.WINDOW_SIZE 
+            while curr_offset <= len(total_buffer) - self.WINDOW_SIZE:
+                delimiter_hash = utils.get_hash(total_buffer[curr_offset:end_range])
+                if utils.get_last_n_bits(delimiter_hash, 13) == self.GLOBAL_MATCH_BITSTRING:
+                    to_send = total_buffer[:end_range]
+                    block_hash = utils.get_hash(to_send)
+                    #set the buffer, and reset curr_offset to 0
+                    self.set_buffer(packet.src, packet.dest, total_buffer[end_range:], 0)
+                    if self.find_hash(block_hash):
+                        #send hash
+                        hash_packet = Packet(packet.src, packet.dest, False, False, block_hash) #is_fin should be False?
+                        self.send(hash_packet, port)
+                    else:
+                        #add to hashtable
+                        self.add_hash(block_hash, to_send)
+                        #send raw data
+                        self.split_and_send(to_send, packet, port)
+                    break
+                else:
+                    curr_offset += 1
+                    end_range += 1
+                    self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
+            #if no delimiter is found, store the entire buffer so far and update the current offset
+        else:
+            to_send = self.find_hash(packet.payload)
+            self.split_and_send(to_send, packet, port)
+        if packet.is_fin:
+            self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, port)
+            self.set_buffer(packet.src, packet.dest, '', 0)
+
+
+
+    def split_and_send(self, to_send, packet, dest):
+        original_packet = packet
+        while True:
+            if len(to_send) <= utils.MAX_PACKET_SIZE:
+                payload = to_send
+                packet = Packet(packet.src, packet.dest, True, original_packet.is_fin, payload)
+                self.send(packet, dest)
+                return
+            else:
+                payload = to_send[:utils.MAX_PACKET_SIZE]
+                packet = Packet(packet.src, packet.dest, True, False, payload)
+                self.send(packet, dest)
+                to_send = to_send[utils.MAX_PACKET_SIZE:]
+
+    def find_hash(self, hashed):
+        if hashed in self.hashtable:
+            return self.hashtable[hashed]
+
+    def add_hash(self, hashed, raw_data):
+        self.hashtable[hashed] = raw_data
+
+    def set_buffer(self, src, dest, s, offset):
+        self.buffer[(src, dest)] = [s, offset]
+
+    def get_buffer(self, src, dest):
+        return self.buffer[(src, dest)][0]
+
+    def get_curr_offset(self, src, dest):
+        return self.buffer[(src, dest)][1]
+
