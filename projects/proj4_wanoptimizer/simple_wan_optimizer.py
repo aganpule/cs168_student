@@ -2,6 +2,7 @@ import wan_optimizer
 import utils
 from tcp_packet import Packet
 from collections import defaultdict
+import sys
 
 class WanOptimizer(wan_optimizer.BaseWanOptimizer):
     """ WAN Optimizer that divides data into fixed-size blocks.
@@ -41,7 +42,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             port = self.wan_port
         if packet.is_raw_data:
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
-            if len(total_buffer) >= self.BLOCK_SIZE:
+            if sys.getsizeof(total_buffer) >= self.BLOCK_SIZE:
                 to_send = total_buffer[:self.BLOCK_SIZE]
                 self.set_buffer(packet.src, packet.dest, total_buffer[self.BLOCK_SIZE:])
                 hashed = utils.get_hash(to_send)
@@ -63,7 +64,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
     def split_and_send(self, to_send, packet, dest):
         original_packet = packet
         while True:
-            if len(to_send) <= utils.MAX_PACKET_SIZE:
+            if sys.getsizeof(to_send) <= utils.MAX_PACKET_SIZE:
                 payload = to_send
                 packet = Packet(packet.src, packet.dest, True, original_packet.is_fin, payload)
                 self.send(packet, dest)
