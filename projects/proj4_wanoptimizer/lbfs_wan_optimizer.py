@@ -53,12 +53,13 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 self.set_buffer(packet.src, packet.dest, '', 0)
                 if self.find_hash(block_hash):
                     hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
-                    print("Sending hash from %s to %s", str(packet.src), str(packet.dest))
+                    print "Sending hash from %s to %s" % (str(packet.src), str(packet.dest))
                     self.send(hash_packet, port)
                 else:
                     self.add_hash(block_hash, total_buffer)
-                    print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
+                    print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
                     self.split_and_send(total_buffer, packet, port)
+                return
                 #don't compute hash, just send
             else:
                 end_range = curr_offset + self.WINDOW_SIZE 
@@ -72,21 +73,21 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                         if self.find_hash(block_hash):
                             if self.get_buffer(packet.src, packet.dest):
                                 hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
-                                print("Sending hash from %s to %s", str(packet.src), str(packet.dest))
+                                print "Sending hash from %s to %s" % (str(packet.src), str(packet.dest))
                                 self.send(hash_packet, port)
                             else:
                                 hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
                                 if packet.is_fin:
-                                    print("Sending raw data + fin from %s to %s", str(packet.src), str(packet.dest))
+                                    print "Sending raw data + fin from %s to %s" % (str(packet.src), str(packet.dest))
                                 else:
-                                    print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
+                                    print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
                                 self.send(hash_packet, port)
                                 return
                         else:
                             #add to hashtable
                             self.add_hash(block_hash, to_send)
                             #send raw data
-                            print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
+                            print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
                             self.split_and_send(to_send, packet, port)
                         break
                     else:
@@ -96,10 +97,10 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 #if no delimiter is found, store the entire buffer so far and update the current offset
         else:
             to_send = self.find_hash(packet.payload)
-            print("Sending raw data from %s to %s", str(packet.src), str(packet.dest))
+            print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
             self.split_and_send(to_send, packet, port)
         if packet.is_fin:
-            print("Sending fin from %s to %s", str(packet.src), str(packet.dest))
+            print "Sending fin from %s to %s" % (str(packet.src), str(packet.dest))
             self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, port)
             self.set_buffer(packet.src, packet.dest, '', 0)
 
