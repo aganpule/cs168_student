@@ -9,4 +9,5 @@ __all__ = [
     "data_reduction_random_edits_file",
     "data_reduction_prefixed_files",
     "verify_data_is_sent_incrementally",
-    "verify_middlebox_handles_interleaved_data"]
+    "verify_middlebox_handles_interleaved_data",
+    "send_fin_overload_buffer"]
