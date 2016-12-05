@@ -37,14 +37,11 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             # The packet is destined to one of the clients connected to this middlebox;
             # send the packet there.
             port = self.address_to_port[packet.dest]
-            # self.send(packet, self.address_to_port[packet.dest])
         else:
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
-            # self.send(packet, self.wan_port)
             port = self.wan_port
         if packet.is_raw_data: 
-            # compute hash, check if seen before, send packet
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
             curr_offset = self.get_curr_offset(packet.src, packet.dest)
 
@@ -53,14 +50,11 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 self.set_buffer(packet.src, packet.dest, '', 0)
                 if self.find_hash(block_hash):
                     hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
-                    # print "Sending hash from %s to %s" % (str(packet.src), str(packet.dest))
                     self.send(hash_packet, port)
                 else:
                     self.add_hash(block_hash, total_buffer)
-                    # print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
                     self.split_and_send(total_buffer, packet, port)
                 return
-                #don't compute hash, just send
             else:
                 end_range = curr_offset + self.WINDOW_SIZE 
                 while end_range <= len(total_buffer):
@@ -68,36 +62,25 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                     if utils.get_last_n_bits(delimiter_hash, self.BITSTRING_LENGTH) == self.GLOBAL_MATCH_BITSTRING:
                         to_send = total_buffer[:end_range]
                         block_hash = utils.get_hash(to_send)
-                        #set the buffer, and reset curr_offset to 0
                         self.set_buffer(packet.src, packet.dest, total_buffer[end_range:], 0)
                         if self.find_hash(block_hash):
                             if self.get_buffer(packet.src, packet.dest):
                                 hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
-                                # print "Sending hash from %s to %s" % (str(packet.src), str(packet.dest))
                                 self.send(hash_packet, port)
                             else:
                                 hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
-                                # if packet.is_fin:
-                                    # print "Sending raw data + fin from %s to %s" % (str(packet.src), str(packet.dest))
-                                # else:
-                                    # print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
                                 self.send(hash_packet, port)
                                 return
                         else:
-                            #add to hashtable
                             self.add_hash(block_hash, to_send)
-                            #send raw data
-                            # print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
                             self.split_and_send(to_send, packet, port)
                         break
                     else:
                         curr_offset += 1
                         end_range += 1
                         self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
-                #if no delimiter is found, store the entire buffer so far and update the current offset
         else:
             to_send = self.find_hash(packet.payload)
-            # print "Sending raw data from %s to %s" % (str(packet.src), str(packet.dest))
             self.split_and_send(to_send, packet, port)
         if packet.is_fin:
             curr_buffer = self.get_buffer(packet.src, packet.dest)
@@ -110,13 +93,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                     self.add_hash(end_hash, curr_buffer)
                     self.split_and_send(curr_buffer, packet, port)
             self.set_buffer(packet.src, packet.dest, '', 0)
-
-            # print "Sending fin from %s to %s" % (str(packet.src), str(packet.dest))
             
-
-            
-
-
 
     def split_and_send(self, to_send, packet, dest):
         original_packet = packet
