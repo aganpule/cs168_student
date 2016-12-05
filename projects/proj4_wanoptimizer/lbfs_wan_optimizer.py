@@ -29,7 +29,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
         packets across the WAN. You should change this function to implement the
         functionality described in part 2.  You are welcome to implement private
         helper fuctions that you call here. You should *not* be calling any functions
-        or directly accessing any variables in the other middlebox on the other side of 
+        or directly accessing any variables in the other middlebox on the other side of
         the WAN; this WAN optimizer should operate based only on its own local state
         and packets that have been received.
         """
@@ -41,44 +41,33 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
             port = self.wan_port
-        if packet.is_raw_data: 
+        if packet.is_raw_data:
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
             curr_offset = self.get_curr_offset(packet.src, packet.dest)
-
-            if len(total_buffer) < self.WINDOW_SIZE:
-                block_hash = utils.get_hash(total_buffer)
-                self.set_buffer(packet.src, packet.dest, '', 0)
-                if self.find_hash(block_hash):
-                    hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
-                    self.send(hash_packet, port)
-                else:
-                    self.add_hash(block_hash, total_buffer)
-                    self.split_and_send(total_buffer, packet, port)
-                return
-            else:
-                end_range = curr_offset + self.WINDOW_SIZE 
-                while end_range <= len(total_buffer):
-                    delimiter_hash = utils.get_hash(total_buffer[curr_offset:end_range])
-                    if utils.get_last_n_bits(delimiter_hash, self.BITSTRING_LENGTH) == self.GLOBAL_MATCH_BITSTRING:
-                        to_send = total_buffer[:end_range]
-                        block_hash = utils.get_hash(to_send)
-                        self.set_buffer(packet.src, packet.dest, total_buffer[end_range:], 0)
-                        if self.find_hash(block_hash):
-                            if self.get_buffer(packet.src, packet.dest):
-                                hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
-                                self.send(hash_packet, port)
-                            else:
-                                hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
-                                self.send(hash_packet, port)
-                                return
+            self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
+            end_range = curr_offset + self.WINDOW_SIZE
+            while end_range <= len(total_buffer):
+                delimiter_hash = utils.get_hash(total_buffer[curr_offset:end_range])
+                if utils.get_last_n_bits(delimiter_hash, self.BITSTRING_LENGTH) == self.GLOBAL_MATCH_BITSTRING:
+                    to_send = total_buffer[:end_range]
+                    block_hash = utils.get_hash(to_send)
+                    self.set_buffer(packet.src, packet.dest, total_buffer[end_range:], 0)
+                    if self.find_hash(block_hash):
+                        if self.get_buffer(packet.src, packet.dest):
+                            hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
+                            self.send(hash_packet, port)
                         else:
-                            self.add_hash(block_hash, to_send)
-                            self.split_and_send(to_send, packet, port)
-                        break
+                            hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
+                            self.send(hash_packet, port)
+                            return
                     else:
-                        curr_offset += 1
-                        end_range += 1
-                        self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
+                        self.add_hash(block_hash, to_send)
+                        self.split_and_send(to_send, packet, port)
+                    break
+                else:
+                    curr_offset += 1
+                    end_range += 1
+                    self.set_buffer(packet.src, packet.dest, total_buffer, curr_offset)
         else:
             to_send = self.find_hash(packet.payload)
             self.split_and_send(to_send, packet, port)
@@ -93,7 +82,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                     self.add_hash(end_hash, curr_buffer)
                     self.split_and_send(curr_buffer, packet, port)
             self.set_buffer(packet.src, packet.dest, '', 0)
-            
+
 
     def split_and_send(self, to_send, packet, dest):
         original_packet = packet
@@ -124,4 +113,3 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
 
     def get_curr_offset(self, src, dest):
         return self.buffer[(src, dest)][1]
-
