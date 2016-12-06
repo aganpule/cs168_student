@@ -61,7 +61,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                             hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
                             self.send(hash_packet, port)
                         else:
-                            hash_packet = Packet(packet.src, packet.dest, False, packet.is_fin, block_hash)
+                            hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
                             self.send(hash_packet, port)
                             return
                     else:
@@ -79,11 +79,13 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             if packet.is_raw_data and curr_buffer:
                 end_hash = utils.get_hash(curr_buffer)
                 if self.find_hash(end_hash):
-                    hash_packet = Packet(packet.src, packet.dest, False, True, end_hash)
+                    hash_packet = Packet(packet.src, packet.dest, False, False, end_hash)
                     self.send(hash_packet, port)
                 else:
                     self.add_hash(end_hash, curr_buffer)
                     self.split_and_send(curr_buffer, packet, port)
+            fin_packet = Packet(packet.src, packet.dest, True, True, "")
+            self.send(fin_packet, port)
             self.set_buffer(packet.src, packet.dest, '')
             self.set_offset(packet.src, packet.dest, 0)
 
@@ -92,7 +94,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
         while True:
             if len(to_send) <= utils.MAX_PACKET_SIZE:
                 payload = to_send
-                packet = Packet(packet.src, packet.dest, True, original_packet.is_fin, payload)
+                packet = Packet(packet.src, packet.dest, True, False, payload)
                 self.send(packet, dest)
                 return
             else:
