@@ -333,6 +333,16 @@ def main():
         dest="test_right_partitions",
         action="store_true"
         )
+    parser.add_argument(
+        "--diamond-top-1",
+        dest="test_diamond_top_1",
+        action="store_true"
+        )
+    parser.add_argument(
+        "--diamond-top-2",
+        dest="test_diamond_top_2",
+        action="store_true"
+        )
 
 
     args = parser.parse_args()
@@ -469,6 +479,20 @@ def main():
             middlebox_module,
             testing_part_1)
         total_tests += 1
+    if args.test_diamond_top_1 or args.run_all:
+        passed_tests += run_test(
+            diamond_top_2_electric_boogaloo.data_reduction_with_jumbled_files,
+            middlebox_module,
+            testing_part_1)
+        total_tests += 1
+    if args.test_diamond_top_2 or args.run_all:
+        passed_tests += run_test(
+            diamond_top_2_electric_boogaloo.cross_sending,
+            middlebox_module,
+            testing_part_1)
+        total_tests += 1
+
+
 
     if passed_tests == total_tests:
         print "{}Success! Passed {}/{} tests{}".format(GREEN, passed_tests, total_tests, CLEAR)

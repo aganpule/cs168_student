@@ -63,7 +63,6 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                         else:
                             hash_packet = Packet(packet.src, packet.dest, False, False, block_hash)
                             self.send(hash_packet, port)
-                            return
                     else:
                         self.add_hash(block_hash, to_send)
                         self.split_and_send(to_send, packet, port)

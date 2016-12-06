@@ -11,4 +11,5 @@ __all__ = [
     "verify_data_is_sent_incrementally",
     "verify_middlebox_handles_interleaved_data",
     "send_fin_overload_buffer",
-    "eric_tests"]
+    "eric_tests",
+    "diamond_top_2_electric_boogaloo"]
