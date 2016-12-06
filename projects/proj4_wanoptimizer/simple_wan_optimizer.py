@@ -34,13 +34,10 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             # The packet is destined to one of the clients connected to this middlebox;
             # send the packet there.
             port = self.address_to_port[packet.dest]
-            client = True
-            # don't send hashes to clients
         else:
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
             port = self.wan_port
-            client = False
         if packet.is_raw_data:
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
             self.set_buffer(packet.src, packet.dest, total_buffer)
@@ -49,14 +46,9 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 total_buffer = total_buffer[self.BLOCK_SIZE:]
                 self.set_buffer(packet.src, packet.dest, total_buffer)
                 hashed = utils.get_hash(to_send)
-                if self.find_hash(hashed) and not client:
-                    if self.get_buffer(packet.src, packet.dest):
-                        hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
-                        self.send(hash_packet, port)
-                    else:
-                        hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
-                        self.send(hash_packet, port)
-                        # return
+                if self.find_hash(hashed):
+                    hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
+                    self.send(hash_packet, port)
                 else:
                     self.add_hash(hashed, to_send)
                     self.split_and_send(to_send, packet, port)
@@ -73,7 +65,7 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 else:
                     self.add_hash(end_hash, curr_buffer)
                     self.split_and_send(curr_buffer, packet, port)
-            fin_packet = Packet(packet.src, packet.dest, True, True, "")
+            fin_packet = Packet(packet.src, packet.dest, True, True, '')
             self.send(fin_packet, port)
             self.set_buffer(packet.src, packet.dest, '')
 
