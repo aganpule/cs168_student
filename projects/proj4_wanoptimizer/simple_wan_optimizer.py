@@ -70,7 +70,6 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             self.set_buffer(packet.src, packet.dest, '')
 
     def split_and_send(self, to_send, packet, dest):
-        original_packet = packet
         while True:
             if len(to_send) <= utils.MAX_PACKET_SIZE:
                 payload = to_send
