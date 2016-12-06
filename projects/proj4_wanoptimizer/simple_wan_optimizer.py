@@ -6,7 +6,6 @@ import sys
 
 class WanOptimizer(wan_optimizer.BaseWanOptimizer):
     """ WAN Optimizer that divides data into fixed-size blocks.
-
     This WAN optimizer should implement part 1 of project 4.
     """
 
@@ -22,7 +21,6 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
 
     def receive(self, packet):
         """ Handles receiving a packet.
-
         Right now, this function simply forwards packets to clients (if a packet
         is destined to one of the directly connected clients), or otherwise sends
         packets across the WAN. You should change this function to implement the
@@ -36,17 +34,22 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
             # The packet is destined to one of the clients connected to this middlebox;
             # send the packet there.
             port = self.address_to_port[packet.dest]
+            client = True
+            # don't send hashes to clients
         else:
             # The packet must be destined to a host connected to the other middlebox
             # so send it across the WAN.
             port = self.wan_port
+            client = False
         if packet.is_raw_data:
             total_buffer = self.get_buffer(packet.src, packet.dest) + packet.payload
-            if len(total_buffer) >= self.BLOCK_SIZE:
+            self.set_buffer(packet.src, packet.dest, total_buffer)
+            while len(total_buffer) >= self.BLOCK_SIZE:
                 to_send = total_buffer[:self.BLOCK_SIZE]
-                self.set_buffer(packet.src, packet.dest, total_buffer[self.BLOCK_SIZE:])
+                total_buffer = total_buffer[self.BLOCK_SIZE:]
+                self.set_buffer(packet.src, packet.dest, total_buffer)
                 hashed = utils.get_hash(to_send)
-                if self.find_hash(hashed):
+                if self.find_hash(hashed) and not client:
                     if self.get_buffer(packet.src, packet.dest):
                         hash_packet = Packet(packet.src, packet.dest, False, False, hashed)
                         self.send(hash_packet, port)
@@ -57,13 +60,25 @@ class WanOptimizer(wan_optimizer.BaseWanOptimizer):
                 else:
                     self.add_hash(hashed, to_send)
                     self.split_and_send(to_send, packet, port)
-            else:
-                self.set_buffer(packet.src, packet.dest, total_buffer)
         else:
             to_send = self.find_hash(packet.payload)
             self.split_and_send(to_send, packet, port)
         if packet.is_fin:
-            self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, port)
+            # self.split_and_send(self.get_buffer(packet.src, packet.dest), packet, port)
+            # self.set_buffer(packet.src, packet.dest, '')
+            curr_buffer = self.get_buffer(packet.src, packet.dest)
+            print "in final case"
+            print "buffer has %d bytes left" % (len(curr_buffer))
+            if packet.is_raw_data and curr_buffer:
+                end_hash = utils.get_hash(curr_buffer)
+                if self.find_hash(end_hash):
+                    print "sending hash: %s" % (end_hash)
+                    hash_packet = Packet(packet.src, packet.dest, False, True, end_hash)
+                    self.send(hash_packet, port)
+                else:
+                    self.add_hash(end_hash, curr_buffer)
+                    print "sending raw data: %s" % (curr_buffer)
+                    self.split_and_send(curr_buffer, packet, port)
             self.set_buffer(packet.src, packet.dest, '')
 
     def split_and_send(self, to_send, packet, dest):
